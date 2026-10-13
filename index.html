@@ -172,7 +172,7 @@
   <button class="share" id="resShare" style="margin:0 0 14px" onclick="shareApp()">💛 Share Lantern with them</button>
   <div id="resApp">
     <div class="seg" id="modeSeg">
-      <button data-v="near" class="on">Near me</button><button data-v="online">Online</button>
+      <button data-v="near" class="on">Near me</button><button data-v="online">Online</button><button data-v="both">Both</button>
     </div>
     <div class="where" id="whereBox">
       <input id="town" list="towns" placeholder="Type a town" autocomplete="off" aria-label="Town">
@@ -250,11 +250,12 @@
 <script>
 // ---------- What Lantern knows ----------
 const FELLOW = {
-  aa:   { n: "Alcoholics Anonymous", s: "AA", c: "#3d6fb6" },
-  na:   { n: "Narcotics Anonymous", s: "NA", c: "#2e8b57" },
-  cma:  { n: "Crystal Meth Anonymous", s: "CMA", c: "#8e5bb5" },
-  slaa: { n: "Sex and Love Addicts Anonymous", s: "SLAA", c: "#c0507a" },
-  coda: { n: "Co-Dependents Anonymous", s: "CoDA", c: "#b4702a" },
+  // w = what the meeting is for, in plain words (shown on every meeting)
+  aa:   { n: "Alcoholics Anonymous", s: "AA", w: "Alcohol", c: "#3d6fb6" },
+  na:   { n: "Narcotics Anonymous", s: "NA", w: "Drugs", c: "#2e8b57" },
+  cma:  { n: "Crystal Meth Anonymous", s: "CMA", w: "Crystal meth", c: "#8e5bb5" },
+  slaa: { n: "Sex and Love Addicts Anonymous", s: "SLAA", w: "Sex and love", c: "#c0507a" },
+  coda: { n: "Co-Dependents Anonymous", s: "CoDA", w: "Relationships", c: "#b4702a" },
 };
 // Official meeting finders (groups whose lists Lantern can't show itself)
 const L = {
@@ -417,39 +418,58 @@ function showMore() { S.limit += 25; render(); }
 function render() {
   if (!DATA) return;
   const c = CATS[S.cat], now = new Date(), today = now.getDay(), nowMin = now.getHours() * 60 + now.getMinutes();
-  $("whereBox").style.display = S.mode === "near" ? "" : "none";
+  $("whereBox").style.display = S.mode === "online" ? "none" : "";
   const wantDay = S.day === "today" ? today : S.day === "tomorrow" ? (today + 1) % 7 : null;
-  let list = DATA.meetings.filter((m) => c.f.includes(m.f) && (S.mode === "online" ? m.m !== 0 : m.m !== 1) && (wantDay == null || m.d === wantDay));
+  // m.m: 0 in person, 1 online, 2 both
+  let list = DATA.meetings.filter((m) => c.f.includes(m.f) && (S.mode === "online" ? m.m !== 0 : S.mode === "near" ? m.m !== 1 : true) && (wantDay == null || m.d === wantDay));
   // Today: hide meetings that have already finished
   if (S.day === "today") list = list.filter((m) => (m.e ? mins(m.e) > mins(m.t) ? mins(m.e) : 1440 : mins(m.t) + 60) > nowMin);
   // "Soonest first" order: minutes from now until the meeting starts
   const until = (m) => { let d = (m.d - today + 7) % 7 * 1440 + mins(m.t) - nowMin; if (d < -90) d += 7 * 1440; return d; };
   let note = "";
-  if (S.mode === "near") {
+  let ask = "";
+  if (S.mode === "both" && !S.here) {
+    // No town yet: show the online ones, and ask for a town to add nearby ones
+    list = list.filter((m) => m.m !== 0);
+    list.forEach((m) => (m._k = null));
+    list.sort((a, b) => until(a) - until(b));
+    note = `${list.length} online meetings · times are Irish and UK time`;
+    ask = `<div class="empty">Type a town or tap <b>Use my location</b> to add meetings near you.</div>`;
+  } else if (S.mode !== "online") {
     if (!S.here) {
       $("resList").innerHTML = `<div class="empty">Type a town or tap <b>Use my location</b> to see meetings near you.<br><small>Your location stays on your phone.</small></div>`;
       $("resNote").textContent = ""; $("moreBtn").style.display = "none"; return;
     }
-    list.forEach((m) => (m._k = km(S.here[0], S.here[1], m.la, m.lo)));
-    let r = 15; while (r < 120 && list.filter((m) => m._k <= r).length < 8) r *= 2;
-    list = list.filter((m) => m._k <= r);
-    list.sort((a, b) => S.day === "any" ? a._k - b._k : until(a) - until(b) || a._k - b._k);
-    note = `${list.length} within ${r} km of ${S.place}`;
+    list.forEach((m) => (m._k = m.m === 1 ? null : km(S.here[0], S.here[1], m.la, m.lo)));
+    const inPerson = list.filter((m) => m._k != null);
+    let r = 15; while (r < 120 && inPerson.filter((m) => m._k <= r).length < 8) r *= 2;
+    // Near me: in person within r km. Both: those plus every online meeting
+    list = list.filter((m) => (m._k != null && m._k <= r) || (S.mode === "both" && m.m !== 0));
+    if (S.mode === "both") {
+      // Far-away meetings that are also online only count as online
+      list.forEach((m) => { if (m._k != null && m._k > r) m._k = null; });
+      list.sort((a, b) => until(a) - until(b) || (a._k ?? 999) - (b._k ?? 999));
+      const near = list.filter((m) => m._k != null && m._k <= r).length;
+      note = `${near} within ${r} km of ${S.place}, plus ${list.length - near} online`;
+    } else {
+      list.sort((a, b) => S.day === "any" ? a._k - b._k : until(a) - until(b) || a._k - b._k);
+      note = `${list.length} within ${r} km of ${S.place}`;
+    }
   } else {
     list.sort((a, b) => until(a) - until(b));
     note = `${list.length} online meetings · times are Irish and UK time`;
   }
   S.list = list;
   $("resNote").textContent = list.length ? note : "";
-  $("resList").innerHTML = list.length ? list.slice(0, S.limit).map((m, i) => card(m, i, until(m))).join("") :
-    `<div class="empty">No ${S.mode === "online" ? "online " : ""}meetings ${S.day === "any" ? "found" : S.day === "today" ? "left today" : "tomorrow"} here.${S.day !== "any" ? " Try <b>Any day</b>," : " Try"} or the official finders below.</div>`;
+  $("resList").innerHTML = ask + (list.length ? list.slice(0, S.limit).map((m, i) => card(m, i, until(m))).join("") :
+    `<div class="empty">No ${S.mode === "online" ? "online " : ""}meetings ${S.day === "any" ? "found" : S.day === "today" ? "left today" : "tomorrow"} here.${S.day !== "any" ? " Try <b>Any day</b>," : " Try"} or the official finders below.</div>`);
   $("moreBtn").style.display = list.length > S.limit ? "" : "none";
 }
 function card(m, i, u) {
   const F = FELLOW[m.f];
   const when = u >= -90 && u < 0 ? `<span class="soon">On now</span>` : u >= 0 && u <= 120 && S.day !== "any" ? `<span class="soon">In ${u < 60 ? u + " min" : Math.round(u / 60) + " hr"}</span>` : "";
   return `<button class="card" onclick="openMeeting(${i})"><div class="row"><span class="time">${S.day === "any" ? DAYS[m.d].slice(0, 3) + " " : ""}${nice(m.t)}</span><span class="name">${esc(m.n)}</span></div>
-    <div class="meta"><span class="badge" style="background:${F.c}">${F.s}</span>${when}${m._k != null && S.mode === "near" ? `<span>${away(m._k)}</span>` : ""}${m.c && S.mode === "near" ? `<span>${esc(m.c)}</span>` : ""}${m.m === 2 ? "<span>Also online</span>" : ""}</div></button>`;
+    <div class="meta"><span class="badge" style="background:${F.c}">${F.w} · ${F.s}</span>${when}${m._k != null && S.mode !== "online" ? `<span>${away(m._k)}</span>` : ""}${m.c && m._k != null && S.mode !== "online" ? `<span>${esc(m.c)}</span>` : ""}${m._k == null && S.mode === "both" ? "<span>💻 Online</span>" : ""}${m.m === 2 && m._k != null ? "<span>Also online</span>" : ""}</div></button>`;
 }
 
 // ---------- One meeting ----------
@@ -457,7 +477,7 @@ function openMeeting(i) {
   const m = S.list[i], F = FELLOW[m.f];
   const src = DATA.sources.find((s) => s.id === m.s);
   const maps = m.la ? `https://www.google.com/maps/search/?api=1&query=${m.la},${m.lo}` : "";
-  $("detail").innerHTML = `<span class="badge" style="background:${F.c}">${F.s}</span> <small>${esc(F.n)}</small>
+  $("detail").innerHTML = `<span class="badge" style="background:${F.c}">${F.w} · ${F.s}</span> <small>${esc(F.n)}</small>
     <h2>${esc(m.n)}</h2>
     <div class="when">${DAYS[m.d]}s · ${nice(m.t)}${m.e ? " – " + nice(m.e) : ""}</div>
     ${m.m !== 1 ? `<p>${esc(m.a)}${m.c && !m.a.includes(m.c) ? ", " + esc(m.c) : ""}</p>` : `<p>Online meeting</p>`}
