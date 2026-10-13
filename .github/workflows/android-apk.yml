@@ -6,7 +6,7 @@ name: Android APK
 on:
   push:
     branches: [main]
-    paths-ignore: ['data/**', 'tools/**'] # the nightly meeting update doesn't need a new APK
+    paths-ignore: ['data/**', 'tools/**', 'meetings/**', 'help/**', 'poster/**', 'sitemap.xml', 'robots.txt', 'pages.css'] # the nightly meeting update doesn't need a new APK
   workflow_dispatch:
 
 permissions:

@@ -33,10 +33,18 @@ const tags = (list) => [...new Set((list || []).flatMap((t) => TAGS.filter(([, r
 const meeting = (o) => ({
   f: o.f, n: (o.n || "Meeting").trim(), d: o.d, t: o.t, e: o.e || "",
   m: o.m, la: o.m === 1 ? null : o.la, lo: o.m === 1 ? null : o.lo,
-  a: o.m === 1 ? "" : (o.a || ""), c: o.m === 1 ? "" : (o.c || "").trim(),
+  a: o.m === 1 ? "" : (o.a || ""), c: o.m === 1 ? "" : tidyTown(o.c),
   u: o.m === 0 ? "" : url(o.u), g: tags(o.g), s: o.s, l: url(o.l),
 });
-const valid = (m) => m.d >= 0 && m.d <= 6 && /^\d\d:\d\d$/.test(m.t) && (m.m === 1 ? m.u || m.l : m.la != null);
+// Town names: "D 10" / "Dub 2" -> "Dublin 10", "LONDON" -> "London"; null = the list says the meeting has closed
+function tidyTown(s) {
+  s = (s || "").trim().replace(/\s+/g, " ");
+  if (/^(folded|cancelled|canceled|closed)$/i.test(s)) return null;
+  s = s.replace(/\b(?:D|Dub)\.?\s?(\d{1,2}w?)\b/gi, (_, n) => "Dublin " + n.toUpperCase());
+  if (s === s.toUpperCase() && /[A-Z]{3}/.test(s)) s = s.toLowerCase().replace(/(^|[\s\-'(])(\p{L})/gu, (_, a, b) => a + b.toUpperCase());
+  return s;
+}
+const valid = (m) => m.c !== null && m.d >= 0 && m.d <= 6 && /^\d\d:\d\d$/.test(m.t) && (m.m === 1 ? m.u || m.l : m.la != null);
 
 // ---------- BMLT (NA Ireland, Virtual NA) ----------
 const BMLT_FIELDS = "meeting_name,weekday_tinyint,start_time,duration_time,time_zone,latitude,longitude,location_text,location_street,location_municipality,location_postal_code_1,venue_type,virtual_meeting_link,formats,published";

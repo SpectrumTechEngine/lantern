@@ -24,12 +24,12 @@ jobs:
         with:
           node-version: 24
 
-      - name: Collect meetings
-        run: node tools/fetch-meetings.mjs
+      - name: Collect meetings and rebuild town pages
+        run: node tools/fetch-meetings.mjs && node tools/build-pages.mjs
 
       - name: Save if changed
         run: |
-          git add data/meetings.json
+          git add data/meetings.json meetings help sitemap.xml robots.txt
           if git diff --cached --quiet; then echo "No changes"; exit 0; fi
           git -c user.name=SpectrumTechEngine -c user.email=eire_ste@hotmail.com commit -m "Update meetings"
           git push
