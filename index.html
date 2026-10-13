@@ -293,7 +293,7 @@ const nice = (t) => { if (!t) return ""; let [h, m] = t.split(":").map(Number); 
 const km = (a, b, c, d) => { const r = Math.PI / 180, x = Math.sin((c - a) * r / 2) ** 2 + Math.cos(a * r) * Math.cos(c * r) * Math.sin((d - b) * r / 2) ** 2; return 12742 * Math.asin(Math.sqrt(x)); };
 const away = (k) => k < 1 ? "under 1 km" : k < 10 ? k.toFixed(1) + " km" : Math.round(k) + " km";
 const linkHTML = (k) => { const [n, d, u] = L[k]; return `<a class="opt" href="${u}" target="_blank" rel="noopener"><span class="e">🔗</span><span>${esc(n)}<small>${esc(d)}</small></span><span class="arr">↗</span></a>`; };
-const telHTML = (k) => { const [n, d, num] = H[k]; const dial = num.split(" or ")[0].replace(/\s/g, ""); return `<a class="tel" href="tel:${dial}"><span><b>${esc(n)}</b><small>${esc(d)}</small></span><span class="num">${esc(num)}</span></a>`; };
+const telHTML = (k) => { const [n, d, num] = H[k]; const dial = /^text/i.test(num) ? "sms:" + num.replace(/\D/g, "") : "tel:" + num.split(" or ")[0].replace(/\s/g, ""); return `<a class="tel" href="${dial}"><span><b>${esc(n)}</b><small>${esc(d)}</small></span><span class="num">${esc(num)}</span></a>`; };
 
 // ---------- Moving between pages (the phone's back button works too) ----------
 let stack = ["welcome"];
@@ -488,9 +488,11 @@ async function copyLink() {
 }
 
 // ---------- Help sheet and About ----------
+// The Talk now popup: crisis and general lines only (topic lines like debt or quitting smoking stay on their topic)
+const SOS = ["emergency", "samaritans", "pieta", "shout", "lifeline", "hse", "frank", "drinkline", "dan", "ukna", "gamcare", "gamIE", "externIE", "externNI", "bodywhys", "beatNI", "beat", "alanonIE", "alanonUK", "nacoa"];
 const AREA = { all: "Ireland and the UK", ie: "Ireland", ni: "Northern Ireland", uk: "UK" };
 $("helpList").innerHTML = ["all", "ie", "ni", "uk"].map((a) =>
-  `<h3>${AREA[a]}</h3>` + Object.keys(H).filter((k) => H[k][3] === a).map(telHTML).join("")).join("");
+  `<h3>${AREA[a]}</h3>` + SOS.filter((k) => H[k][3] === a).map(telHTML).join("")).join("");
 ready.then(() => {
   $("srcList").innerHTML = DATA.sources.map((s) =>
     `<a class="opt" href="${esc(s.site)}" target="_blank" rel="noopener"><span>${esc(s.name)}<small>Checked ${esc(s.updated || "–")}</small></span><span class="arr">↗</span></a>`).join("");

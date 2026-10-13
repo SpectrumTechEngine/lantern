@@ -77,7 +77,7 @@ const byDay = (list, online) => WEEK.map((d) => {
   const day = list.filter((m) => m.d === d).sort((a, b) => a.t.localeCompare(b.t) || a.n.localeCompare(b.n));
   return day.length ? `<h2>${DAYS[d]}</h2><ul class="meetings">${day.map((m) => meetingRow(m, online)).join("")}</ul>` : "";
 }).join("");
-const helplines = (keys) => `<ul class="tels">${keys.map((k) => { const [n, d, num] = H[k]; return `<li><a href="tel:${num.split(" or ")[0].replace(/\s/g, "")}"><b>${esc(n)}</b> <span>${esc(num)}</span></a><small>${esc(d)}</small></li>`; }).join("")}</ul>`;
+const helplines = (keys) => `<ul class="tels">${keys.map((k) => { const [n, d, num] = H[k]; return `<li><a href="${/^text/i.test(num) ? "sms:" + num.replace(/\D/g, "") : "tel:" + num.split(" or ")[0].replace(/\s/g, "")}"><b>${esc(n)}</b> <span>${esc(num)}</span></a><small>${esc(d)}</small></li>`; }).join("")}</ul>`;
 const finders = (keys) => `<ul class="finders">${keys.map((k) => { const [n, d, u] = L[k]; return `<li><a href="${u}" rel="noopener" target="_blank"><b>${esc(n)}</b></a><small>${esc(d)}</small></li>`; }).join("")}</ul>`;
 const listNames = (fs_) => [...new Set(fs_.map((f) => FELLOW[f].n))];
 
