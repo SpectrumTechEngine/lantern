@@ -101,7 +101,7 @@ for (const t of kept) {
   const groups = listNames([...new Set(t.list.map((m) => m.f))]);
   const near = kept.filter((o) => o !== t).map((o) => [o, km(t.la, t.lo, o.la, o.lo)]).sort((a, b) => a[1] - b[1]).slice(0, 8);
   const help = t.ie ? ["samaritans", "hse", "lifeline", "gamIE"] : ["samaritans", "frank", "drinkline", "gamcare"];
-  const aa = t.ie ? ["aaIE", "alanon", "gaIE", "oaIE", "smartIE"] : ["aaGB", "alanon", "gaUK", "oaGB", "smartUK"];
+  const aa = t.ie ? ["aaIE", "caIE", "gaIE", "oaIE", "smartIE", "alanon", "gamanonIE"] : ["aaGB", "caUK", "gaUK", "oaGB", "smartUK", "alanon", "gamanonUK"];
   const url = `/meetings/${t.key}/`;
   urls.push(url);
   out.set(`meetings/${t.key}/index.html`, page({
