@@ -45,7 +45,7 @@ const L = {
   itaa: ["Internet and Technology Addicts Anonymous", "Screens, gaming, phones · online, some UK groups", "https://internetaddictsanonymous.org/online-meetings/"],
   // Added 13 Oct 2026 (all links checked that day)
   gaa: ["Gaming Addicts Anonymous", "Gaming · online, some local groups", "https://www.gamingaddictsanonymous.org/online-meetings/"],
-  ua: ["Underearners Anonymous", "Money · online, phone and London", "https://underearnersanonymous.org/locations/"],
+  ua: ["Underearners Anonymous", "Money · online, phone and London", "https://underearnersanonymous.org/meetings-underearners-anonymous/"],
   pills: ["Pills Anonymous", "Prescription drugs · online meetings", "https://www.pillsanonymous.org/find-a-virtual-meeting"],
   rd: ["Recovery Dharma", "Any addiction · mindfulness-based · London and online", "https://recoverydharma.org/meetings/"],
   clubsoda: ["Club Soda", "Drinking less or not at all · UK events and community", "https://joinclubsoda.com/events/"],
