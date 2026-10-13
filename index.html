@@ -131,6 +131,8 @@
   .share{align-self:center;display:block;margin:4px auto 0;background:var(--card);border:1px solid var(--line);border-radius:999px;
     padding:10px 16px;font-weight:700;font-size:.95rem;color:var(--ink);cursor:pointer}
   .share:active{transform:scale(.98)}
+  /* The Spectrum Tech Engine badge: small; 5 quick taps open the owner tools (ste-owner.js) */
+  img.ste-logo{display:block;width:170px;max-width:60%;height:auto;margin:22px auto 0;opacity:.9;cursor:pointer;-webkit-user-select:none;user-select:none}
   footer{margin-top:30px;font-size:.82rem;color:var(--soft);line-height:1.6;text-align:center}
   footer button{font-size:.82rem}
 </style>
@@ -159,6 +161,7 @@
     <button class="link" onclick="openHelp()">Need to talk to someone now?</button>
     <button class="share" onclick="shareApp()">💛 Worried about someone? Share Lantern</button>
   </div>
+  <img class="ste-logo" src="ste-logo.png" alt="Created by The Spectrum Tech Engine" width="560" height="76">
 </section>
 
 <!-- 2. Find support -->
@@ -173,6 +176,7 @@
   <footer>
     Lantern isn't part of, or endorsed by, any fellowship.<br>
     <button class="link" onclick="go('about')">About Lantern and your privacy</button>
+    <img class="ste-logo" src="ste-logo.png" alt="Created by The Spectrum Tech Engine" width="560" height="76">
   </footer>
 </section>
 
