@@ -432,11 +432,12 @@ function render() {
   const hasNear = DATA.meetings.some((m) => c.f.includes(m.f) && m.m !== 1);
   const hasOnline = DATA.meetings.some((m) => c.f.includes(m.f) && m.m !== 0);
   const inApp = S.mode === "near" ? hasNear : S.mode === "online" ? hasOnline : hasNear || hasOnline;
-  $("whereBox").style.display = S.mode !== "online" && hasNear ? "" : "none";
-  $("daySeg").style.display = inApp ? "" : "none";
+  // Same controls on every topic: town box for Near me and Both, days always
+  $("whereBox").style.display = S.mode !== "online" ? "" : "none";
   $("offTitle").textContent = inApp ? "More meetings on official sites" : "Find meetings";
   if (!inApp) {
-    const what = S.mode === "near" ? "meetings near you" : S.mode === "online" ? "online meetings" : "meetings near you and online";
+    const place = S.here ? esc(S.place) : "you";
+    const what = S.mode === "near" ? `meetings near ${place}` : S.mode === "online" ? "online meetings" : `meetings near ${place} and online`;
     $("resNote").textContent = ""; $("moreBtn").style.display = "none";
     $("resList").innerHTML = `<div class="empty">These groups keep their own meeting lists.<br>Tap one below to see ${what} on their official site. ↓</div>`;
     return;
@@ -457,7 +458,7 @@ function render() {
     list.sort((a, b) => until(a) - until(b));
     note = `${list.length} online meetings · times are Irish and UK time`;
     ask = hasNear ? `<div class="empty">Type a town or tap <b>Use my location</b> to add meetings near you.</div>`
-      : `<div class="empty">For meetings near you, tap an official finder further down. ↓</div>`;
+      : `<div class="empty">These groups keep their own lists of meetings near ${S.here ? esc(S.place) : "you"}. Tap an official finder further down. ↓</div>`;
   } else if (S.mode !== "online") {
     if (!S.here) {
       $("resList").innerHTML = `<div class="empty">Type a town or tap <b>Use my location</b> to see meetings near you.<br><small>Your location stays on your phone.</small></div>`;
