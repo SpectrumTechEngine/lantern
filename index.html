@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lantern: Find the Light</title>
+<meta name="description" content="Free recovery meetings across Ireland and the UK, in person and online, all in one place. Private, no sign-up.">
+<meta name="theme-color" content="#1d2238">
+<link rel="icon" href="lantern-192.png">
+<link rel="apple-touch-icon" href="lantern.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://thespectrumtechengine.com/ste-owner.js" data-app="lantern" defer></script>
+<style>
+  :root{
+    --bg:#fbf6f0; --card:#ffffff; --ink:#2d2a32; --soft:#6b6570;
+    --accent:#e07a5f; --accent-ink:#ffffff; --calm:#2f7f7f; --line:#ece4da;
+    --glow1:#ffe3d3; --glow2:#d8efe9; --chip:#f3ece4;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#1c1a20; --card:#27242c; --ink:#f3eee8; --soft:#b3aab3;
+      --accent:#ec8e74; --accent-ink:#1c1a20; --calm:#6cc0b8; --line:#38343f;
+      --glow1:#3a2a26; --glow2:#1f3533; --chip:#322e38;
+    }
+  }
+  *{box-sizing:border-box;margin:0}
+  html,body{min-height:100%}
+  body{background:var(--bg);color:var(--ink);font-family:Nunito,system-ui,sans-serif;-webkit-tap-highlight-color:transparent;line-height:1.4}
+  button{font:inherit;color:inherit}
+  a{color:var(--calm)}
+  .page{min-height:100vh;max-width:520px;margin:0 auto;padding:20px 16px 48px;display:none;flex-direction:column;animation:fade .4s ease}
+  .page.on{display:flex}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  /* Welcome */
+  #welcome{text-align:center;gap:16px;
+    background:radial-gradient(circle at 30% 25%,var(--glow1),transparent 55%),radial-gradient(circle at 75% 80%,var(--glow2),transparent 55%)}
+  .free{align-self:center;font-size:.85rem;font-weight:700;color:var(--soft);background:var(--card);border:1px solid var(--line);
+    padding:5px 12px;border-radius:999px;opacity:.9}
+  .welcome-body{flex:1;display:flex;flex-direction:column;justify-content:center;gap:16px}
+  .lantern{width:110px;height:140px;margin:0 auto 4px;filter:drop-shadow(0 0 26px #ffc98a)}
+  .lantern .flame{transform-origin:60px 92px;animation:flicker 3.2s ease-in-out infinite}
+  @keyframes flicker{25%{transform:scale(1.06,.96)}50%{transform:scale(.95,1.05)}75%{transform:scale(1.03,.98)}}
+  .brand{font-size:.95rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+  h1{font-size:2.1rem;font-weight:800;line-height:1.15}
+  .lead{font-size:1.12rem;color:var(--soft);line-height:1.5}
+  .small{font-size:.95rem;color:var(--soft)}
+  .btn{display:block;width:100%;border:0;border-radius:18px;padding:17px;font-weight:800;font-size:1.12rem;cursor:pointer;
+    background:var(--accent);color:var(--accent-ink);box-shadow:0 6px 18px #e07a5f40;transition:transform .12s;text-align:center;text-decoration:none}
+  .btn:active{transform:scale(.98)}
+  .btn.ghost{background:var(--card);color:var(--ink);border:1px solid var(--line);box-shadow:none}
+  .link{background:none;border:0;color:var(--calm);font-weight:700;text-decoration:underline;cursor:pointer;padding:8px}
+
+  /* Top bar */
+  .top{display:flex;align-items:center;gap:6px;margin-bottom:14px;min-height:44px}
+  .back{background:none;border:0;font-size:1.6rem;color:var(--soft);cursor:pointer;padding:4px 10px 4px 0}
+  .top h2{font-size:1.35rem;font-weight:800;flex:1}
+  .sos{background:none;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:.85rem;font-weight:700;color:var(--calm);cursor:pointer;white-space:nowrap}
+
+  /* Find page */
+  .all{display:flex;align-items:center;gap:14px;text-align:left;padding:22px 20px;font-size:1.3rem;border-radius:22px}
+  .all .e{font-size:2rem}
+  .all small{display:block;font-weight:600;font-size:.9rem;opacity:.85}
+  .sub{font-size:1.25rem;margin:26px 0 12px;font-weight:800}
+  .list{display:grid;gap:10px}
+  .opt{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);
+    border-radius:16px;padding:15px 18px;font-size:1.06rem;font-weight:700;cursor:pointer;text-decoration:none;color:var(--ink)}
+  .opt:active{transform:scale(.99)}
+  .opt .e{font-size:1.35rem;width:30px;text-align:center;flex:none}
+  .opt .arr{margin-left:auto;color:var(--soft);flex:none}
+  .opt.soft{background:transparent}
+  .opt small{display:block;font-weight:600;color:var(--soft);font-size:.86rem}
+
+  /* Results */
+  .intro{color:var(--soft);margin-bottom:14px}
+  .seg{display:flex;background:var(--chip);border-radius:14px;padding:4px;gap:4px;margin-bottom:10px}
+  .seg button{flex:1;border:0;background:none;padding:10px 6px;border-radius:11px;font-weight:700;cursor:pointer;color:var(--soft)}
+  .seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 4px #0002}
+  .where{display:flex;gap:8px;margin-bottom:10px}
+  .where input{flex:1;min-width:0;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:11px 12px;font:inherit}
+  .where button{border:0;background:var(--calm);color:#fff;border-radius:12px;padding:0 14px;font-weight:700;cursor:pointer;white-space:nowrap}
+  .note{font-size:.88rem;color:var(--soft);margin:2px 0 10px}
+  .card{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;cursor:pointer;margin-bottom:10px}
+  .card .row{display:flex;gap:10px;align-items:baseline}
+  .card .time{font-weight:800;font-size:1.05rem;white-space:nowrap}
+  .card .name{font-weight:700;flex:1;min-width:0;overflow-wrap:anywhere}
+  .card .meta{font-size:.9rem;color:var(--soft);margin-top:4px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
+  .badge{display:inline-block;font-size:.72rem;font-weight:800;padding:2px 7px;border-radius:7px;color:#fff;letter-spacing:.02em}
+  .soon{color:var(--accent);font-weight:800}
+  .empty{background:var(--card);border:1px dashed var(--line);border-radius:16px;padding:18px;color:var(--soft);text-align:center;margin-bottom:10px}
+  .more{margin-top:8px}
+  h3{font-size:1.1rem;margin:24px 0 10px;font-weight:800}
+
+  /* Detail */
+  .detail{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px}
+  .detail h2{font-size:1.4rem;margin:8px 0 4px}
+  .detail .when{font-size:1.1rem;font-weight:700;margin:10px 0}
+  .detail p{margin:8px 0;color:var(--soft)}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+  .chips span{background:var(--chip);border-radius:999px;padding:4px 10px;font-size:.85rem;font-weight:700}
+  .stack{display:grid;gap:10px;margin-top:16px}
+  .care{font-size:.88rem;color:var(--soft);margin-top:16px;line-height:1.5}
+
+  /* Guide */
+  .guide p{margin:0 0 12px;line-height:1.6}
+  .guide h3{margin-top:20px}
+
+  /* Help sheet */
+  .sheet{position:fixed;inset:0;background:#0007;display:none;align-items:flex-end;justify-content:center;z-index:5}
+  .sheet.on{display:flex}
+  .sheet .box{background:var(--bg);width:100%;max-width:520px;max-height:88vh;overflow:auto;border-radius:22px 22px 0 0;padding:20px 16px 30px;animation:fade .3s}
+  .sheet h3{margin:16px 0 8px;font-size:1rem;color:var(--soft);text-transform:uppercase;letter-spacing:.06em}
+  .sheet h2{font-size:1.3rem}
+  .tel{display:flex;justify-content:space-between;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px;text-decoration:none;color:var(--ink)}
+  .tel b{display:block}
+  .tel small{color:var(--soft)}
+  .tel .num{font-weight:800;color:var(--calm);white-space:nowrap}
+  .share{align-self:center;display:block;margin:4px auto 0;background:var(--card);border:1px solid var(--line);border-radius:999px;
+    padding:10px 16px;font-weight:700;font-size:.95rem;color:var(--ink);cursor:pointer}
+  .share:active{transform:scale(.98)}
+  footer{margin-top:30px;font-size:.82rem;color:var(--soft);line-height:1.6;text-align:center}
+  footer button{font-size:.82rem}
+</style>
+</head>
+<body>
+
+<!-- 1. Welcome -->
+<section class="page on" id="welcome">
+  <div class="free">Lantern is free and always will be</div>
+  <div class="welcome-body">
+    <svg class="lantern" viewBox="0 0 120 150" aria-hidden="true">
+      <path d="M42 14a18 18 0 0 1 36 0" fill="none" stroke="#7a5c44" stroke-width="5" stroke-linecap="round"/>
+      <rect x="34" y="18" width="52" height="12" rx="5" fill="#7a5c44"/>
+      <rect x="28" y="30" width="64" height="94" rx="14" fill="#ffd9a0" opacity=".55"/>
+      <rect x="28" y="30" width="64" height="94" rx="14" fill="none" stroke="#7a5c44" stroke-width="5"/>
+      <path class="flame" d="M60 58c9 12 14 20 14 28a14 14 0 0 1-28 0c0-8 5-16 14-28z" fill="#ff9f43"/>
+      <path class="flame" d="M60 72c4 6 7 10 7 14a7 7 0 0 1-14 0c0-4 3-8 7-14z" fill="#ffe08a"/>
+      <rect x="30" y="122" width="60" height="12" rx="5" fill="#7a5c44"/>
+    </svg>
+    <div class="brand">Lantern</div>
+    <h1>You're welcome here.</h1>
+    <p class="lead">Whatever you're going through, you don't have to face it alone.</p>
+    <p class="small">Meetings near you and online, all in one place.<br>Free, private, no sign-up.</p>
+    <div style="height:6px"></div>
+    <button class="btn" onclick="go('find')">Find a meeting →</button>
+    <button class="link" onclick="openHelp()">Need to talk to someone now?</button>
+    <button class="share" onclick="shareApp()">💛 Worried about someone? Share Lantern</button>
+  </div>
+</section>
+
+<!-- 2. Find support -->
+<section class="page" id="find">
+  <div class="top"><button class="back" onclick="back()" aria-label="Back">←</button><h2></h2><button class="sos" onclick="openHelp()">Talk now</button></div>
+  <button class="btn all" onclick="openCat('all')">
+    <span class="e">🌍</span><span>Look at all meetings<small>Every group, near you and online</small></span>
+  </button>
+  <div class="sub">Or find support for…</div>
+  <div class="list" id="catList"></div>
+  <button class="share" style="margin-top:22px" onclick="shareApp()">💛 Worried about someone? Share Lantern</button>
+  <footer>
+    Lantern isn't part of, or endorsed by, any fellowship.<br>
+    <button class="link" onclick="go('about')">About Lantern and your privacy</button>
+  </footer>
+</section>
+
+<!-- 3. Meetings -->
+<section class="page" id="results">
+  <div class="top"><button class="back" onclick="back()" aria-label="Back">←</button><h2 id="resTitle"></h2><button class="sos" onclick="openHelp()">Talk now</button></div>
+  <p class="intro" id="resIntro"></p>
+  <button class="share" id="resShare" style="margin:0 0 14px" onclick="shareApp()">💛 Share Lantern with them</button>
+  <div id="resApp">
+    <div class="seg" id="modeSeg">
+      <button data-v="near" class="on">Near me</button><button data-v="online">Online</button>
+    </div>
+    <div class="where" id="whereBox">
+      <input id="town" list="towns" placeholder="Type a town" autocomplete="off" aria-label="Town">
+      <datalist id="towns"></datalist>
+      <button onclick="useGPS()">📍 Use my location</button>
+    </div>
+    <div class="seg" id="daySeg">
+      <button data-v="today" class="on">Today</button><button data-v="tomorrow">Tomorrow</button><button data-v="any">Any day</button>
+    </div>
+    <p class="note" id="resNote"></p>
+    <div id="resList"></div>
+    <button class="btn ghost more" id="moreBtn" onclick="showMore()">Show more</button>
+  </div>
+  <h3 id="offTitle">More meetings on official sites</h3>
+  <p class="note" id="offNote">These groups keep their own lists. Each link opens their official meeting finder.</p>
+  <div class="list" id="offList"></div>
+  <footer id="resFoot"></footer>
+</section>
+
+<!-- 4. One meeting -->
+<section class="page" id="meeting">
+  <div class="top"><button class="back" onclick="back()" aria-label="Back">←</button><h2></h2><button class="sos" onclick="openHelp()">Talk now</button></div>
+  <div class="detail" id="detail"></div>
+</section>
+
+<!-- 5. Not sure? -->
+<section class="page guide" id="guide">
+  <div class="top"><button class="back" onclick="back()" aria-label="Back">←</button><h2>Not sure where to start?</h2></div>
+  <p>That's completely okay. You don't need to be sure of anything to go to a meeting. You don't even need to say a word.</p>
+  <h3>What happens at a meeting?</h3>
+  <p>People sit together and take turns sharing what's helped them. You can just listen. Meetings are free, and nobody will ask for your full name.</p>
+  <h3>Open or closed?</h3>
+  <p><b>Open</b> meetings welcome anyone, including family, friends, or someone who's just curious. <b>Closed</b> meetings are for people who want help with that problem themselves.</p>
+  <h3>Which group?</h3>
+  <p>Pick whatever feels closest. If it's not the right fit, the people there are usually happy to point you somewhere better.</p>
+  <div class="list" id="guideList"></div>
+  <h3>Online first?</h3>
+  <p>Many people start online, with their camera off. Tap any topic above, then choose <b>Online</b>.</p>
+</section>
+
+<!-- 6. About -->
+<section class="page guide" id="about">
+  <div class="top"><button class="back" onclick="back()" aria-label="Back">←</button><h2>About Lantern</h2></div>
+  <p><b>Lantern is free and always will be.</b> It's made by The Spectrum Tech Engine to help people in Ireland and the UK find recovery meetings in one place.</p>
+  <h3>Your privacy</h3>
+  <p>No sign-up, no account. If you use your location, it stays on your phone and is only used to sort meetings by distance. Lantern never records which meetings or topics you look at.</p>
+  <h3>Where meetings come from</h3>
+  <p>Lantern reads the public meeting lists that fellowships publish, once a day. Lantern isn't part of, or endorsed by, any fellowship. Meetings can change, so please check the official listing before you travel.</p>
+  <div class="list" id="srcList"></div>
+  <p class="note" style="margin-top:14px">Run a meeting list and want it added, changed or removed? Email <a href="mailto:hello@thespectrumtechengine.com">hello@thespectrumtechengine.com</a></p>
+</section>
+
+<!-- Help sheet -->
+<div class="sheet" id="help" onclick="if(event.target===this)closeHelp()">
+  <div class="box" role="dialog" aria-label="Talk to someone now">
+    <h2>You can talk to someone now</h2>
+    <p class="note" style="margin-top:6px">Free and confidential. If someone is in danger, call 112 or 999.</p>
+    <div id="helpList"></div>
+    <p class="note">Numbers checked October 2026.</p>
+    <button class="btn ghost" onclick="closeHelp()">Close</button>
+  </div>
+</div>
+
+<!-- Share sheet (used when the phone has no built-in share menu) -->
+<div class="sheet" id="shareSheet" onclick="if(event.target===this)closeShare()">
+  <div class="box" role="dialog" aria-label="Share Lantern">
+    <h2>Share Lantern</h2>
+    <p class="note" style="margin:6px 0 14px">Sending it is a kind thing to do. It's free, private and needs no sign-up.</p>
+    <div class="list" id="shareList"></div>
+    <p class="note" id="shareMsg" style="margin-top:10px"></p>
+    <button class="btn ghost" style="margin-top:6px" onclick="closeShare()">Close</button>
+  </div>
+</div>
+
+<script>
+// ---------- What Lantern knows ----------
+const FELLOW = {
+  aa:   { n: "Alcoholics Anonymous", s: "AA", c: "#3d6fb6" },
+  na:   { n: "Narcotics Anonymous", s: "NA", c: "#2e8b57" },
+  cma:  { n: "Crystal Meth Anonymous", s: "CMA", c: "#8e5bb5" },
+  slaa: { n: "Sex and Love Addicts Anonymous", s: "SLAA", c: "#c0507a" },
+  coda: { n: "Co-Dependents Anonymous", s: "CoDA", c: "#b4702a" },
+};
+// Official meeting finders (groups whose lists Lantern can't show itself)
+const L = {
+  aaIE: ["Alcoholics Anonymous Ireland", "Ireland and Northern Ireland", "https://www.alcoholicsanonymous.ie/find-meeting/"],
+  aaGB: ["Alcoholics Anonymous Great Britain", "England, Scotland and Wales, plus online", "https://www.alcoholics-anonymous.org.uk/find-a-meeting/"],
+  oiaa: ["AA online meetings", "Online, every hour of the day", "https://aa-intergroup.org/meetings/"],
+  smartUK: ["SMART Recovery UK", "Any addiction · in person and online", "https://smartrecovery.org.uk/meetings"],
+  smartIE: ["SMART Recovery Ireland", "Any addiction · in person and online", "https://smartrecovery.ie/meetings/"],
+  naIE: ["Narcotics Anonymous Ireland", "Ireland and Northern Ireland", "https://www.na-ireland.org/"],
+  ukna: ["UK Narcotics Anonymous", "England, Scotland and Wales", "https://meetings.ukna.org/meeting/search"],
+  vna: ["Virtual NA", "Online", "https://virtual-na.org/"],
+  caUK: ["Cocaine Anonymous UK", "UK including Northern Ireland, plus online", "https://meetings.cocaineanonymous.org.uk/meetings"],
+  caIE: ["Cocaine Anonymous Ireland", "Ireland", "https://caireland.live/meeting-schedule"],
+  cma: ["Crystal Meth Anonymous", "UK, Ireland and online", "https://www.crystalmeth.org/meetings"],
+  ma: ["Marijuana Anonymous", "Mostly online", "https://marijuana-anonymous.org/find-a-meeting"],
+  gaUK: ["Gamblers Anonymous UK", "UK including Northern Ireland", "https://gamblersanonymous.org.uk/meeting/"],
+  gaIE: ["Gamblers Anonymous Ireland", "Ireland", "https://gamblersanonymous.ie/meetings"],
+  oaGB: ["Overeaters Anonymous GB", "Great Britain, plus online", "https://oagb.org.uk/find-a-meeting/"],
+  oaIE: ["Overeaters Anonymous Ireland", "Ireland, plus online", "https://overeatersanonymous.ie/find-a-meeting/"],
+  slaa: ["Sex and Love Addicts Anonymous UK", "UK, plus online", "https://slaauk.org/"],
+  saa: ["Sex Addicts Anonymous UK", "UK", "https://saauk.info/meetings/"],
+  sa: ["Sexaholics Anonymous UK", "UK including Belfast", "https://sauk.org/activities/sexaholics-anonymous-meetings/"],
+  coda: ["Co-Dependents Anonymous UK", "Relationships · UK, plus online", "https://codauk.org/"],
+  alanon: ["Al-Anon and Alateen", "Someone's drinking · UK and Ireland", "https://al-anonuk.org.uk/find-a-meeting/"],
+  aca: ["Adult Children of Alcoholics UK", "Grew up around drinking or other harm", "https://www.adultchildrenofalcoholics.co.uk/meetings/"],
+  naranon: ["Nar-Anon", "Someone's drug use · online and worldwide", "https://nar-anon.org/find-a-meeting"],
+  gamanonUK: ["Gam-Anon UK", "Someone's gambling", "https://gamanon.org.uk/meetings/"],
+  gamanonIE: ["Gam-Anon Ireland", "Someone's gambling", "https://gamblersanonymous.ie/gam-anon-meetings"],
+  fa: ["Families Anonymous UK", "Someone's drug or alcohol use", "https://famanon.org.uk/meetings/meetings-in-the-uk/"],
+  sanon: ["S-Anon UK", "Someone's sexual behaviour", "https://s-anonuk.org/"],
+  da: ["Debtors Anonymous UK", "Money and debt", "https://debtorsanonymous.org.uk/meetings-list/"],
+  itaa: ["Internet and Technology Addicts Anonymous", "Screens, gaming, phones · online", "https://internetaddictsanonymous.org/"],
+};
+// Helplines: [name, detail, number, area]
+const H = {
+  emergency: ["Emergency services", "If someone is in danger", "112 or 999", "all"],
+  samaritans: ["Samaritans", "Any time, about anything · 24/7", "116 123", "all"],
+  lifeline: ["Lifeline", "Northern Ireland · 24/7", "0808 808 8000", "ni"],
+  hse: ["HSE Drugs and Alcohol Helpline", "Ireland · Mon–Fri 9:30–5:30", "1800 459 459", "ie"],
+  frank: ["FRANK", "Drugs · UK · 24/7", "0300 123 6600", "uk"],
+  drinkline: ["Drinkline", "Alcohol · UK · weekdays 9–8, weekends 11–4", "0300 123 1110", "uk"],
+  ukna: ["NA helpline", "UK · 10am to midnight", "0300 999 1212", "uk"],
+  gamcare: ["National Gambling Helpline", "Great Britain · 24/7", "0808 8020 133", "uk"],
+  gamIE: ["Gambling Care Ireland", "Ireland", "1800 936 725", "ie"],
+  externIE: ["Extern Problem Gambling", "Ireland", "089 241 5401", "ie"],
+  externNI: ["Extern Problem Gambling", "Northern Ireland", "07537 188 575", "ni"],
+  alanonUK: ["Al-Anon helpline", "UK · for families and friends", "0800 0086 811", "uk"],
+  alanonIE: ["Al-Anon helpline", "Ireland · for families and friends", "01 873 2699", "ie"],
+  nacoa: ["Nacoa", "For children of parents who drink · UK", "0800 358 3456", "uk"],
+};
+const CATS = {
+  all:     { e: "🌍", t: "All meetings", f: Object.keys(FELLOW), intro: "Every group Lantern can show, near you and online.",
+             links: Object.keys(L), help: Object.keys(H) },
+  alcohol: { e: "🍃", t: "Alcohol", f: ["aa"], intro: "Alcoholics Anonymous (AA) meets in almost every town. For meetings near you, tap an official finder below. Here are AA meetings online, on Irish and UK time.",
+             links: ["aaIE", "aaGB", "oiaa", "smartIE", "smartUK"], help: ["hse", "drinkline", "samaritans", "lifeline"] },
+  drugs:   { e: "🌱", t: "Drugs", f: ["na", "cma"], intro: "Narcotics Anonymous (NA) welcomes anyone who wants to stop using any drug.",
+             links: ["naIE", "ukna", "vna", "caIE", "caUK", "cma", "ma", "smartIE", "smartUK"], help: ["hse", "frank", "ukna", "samaritans", "lifeline"] },
+  gambling:{ e: "🎲", t: "Gambling", f: [], intro: "Gamblers Anonymous meets across Ireland and the UK. Tap below to see their meetings near you.",
+             links: ["gaIE", "gaUK", "smartIE", "smartUK"], help: ["gamcare", "gamIE", "externIE", "externNI", "samaritans"] },
+  food:    { e: "🍎", t: "Food", f: [], intro: "Overeaters Anonymous is for any kind of struggle with food: eating too much, too little, or bingeing.",
+             links: ["oaIE", "oaGB"], help: ["samaritans", "lifeline"] },
+  sex:     { e: "💞", t: "Sex and relationships", f: ["slaa", "coda"], intro: "Groups for sex, love, porn and relationship patterns that have become painful.",
+             links: ["slaa", "saa", "sa", "coda"], help: ["samaritans", "lifeline"] },
+  worried: { e: "🤝", t: "I'm worried about someone", f: ["coda"], intro: "Someone else's drinking, drug use or gambling affects you too. These groups are for family and friends.",
+             links: ["alanon", "fa", "naranon", "gamanonIE", "gamanonUK", "aca", "sanon", "coda"], help: ["alanonIE", "alanonUK", "nacoa", "samaritans"] },
+};
+const MORE = {};
+const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const TAG = { open: "Open to all", closed: "Closed", newcomers: "Newcomers welcome", women: "Women", men: "Men", lgbtq: "LGBTQ+", wheelchair: "Wheelchair access", speaker: "Speaker", discussion: "Discussion" };
+
+// Owner usage counts only (never what topic or meeting)
+function ste(f, ...a) { try { if (window.STE && window.STE[f]) window.STE[f](...a); } catch (e) {} }
+
+// ---------- Small helpers ----------
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const mins = (t) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+const nice = (t) => { if (!t) return ""; let [h, m] = t.split(":").map(Number); const ap = h < 12 ? "am" : "pm"; h = h % 12 || 12; return h + (m ? ":" + String(m).padStart(2, "0") : "") + ap; };
+const km = (a, b, c, d) => { const r = Math.PI / 180, x = Math.sin((c - a) * r / 2) ** 2 + Math.cos(a * r) * Math.cos(c * r) * Math.sin((d - b) * r / 2) ** 2; return 12742 * Math.asin(Math.sqrt(x)); };
+const away = (k) => k < 1 ? "under 1 km" : k < 10 ? k.toFixed(1) + " km" : Math.round(k) + " km";
+const linkHTML = (k) => { const [n, d, u] = L[k]; return `<a class="opt" href="${u}" target="_blank" rel="noopener"><span class="e">🔗</span><span>${esc(n)}<small>${esc(d)}</small></span><span class="arr">↗</span></a>`; };
+const telHTML = (k) => { const [n, d, num] = H[k]; const dial = num.split(" or ")[0].replace(/\s/g, ""); return `<a class="tel" href="tel:${dial}"><span><b>${esc(n)}</b><small>${esc(d)}</small></span><span class="num">${esc(num)}</span></a>`; };
+
+// ---------- Moving between pages (the phone's back button works too) ----------
+let stack = ["welcome"];
+function show(id) { document.querySelectorAll(".page").forEach((p) => p.classList.toggle("on", p.id === id)); scrollTo(0, 0); }
+function go(id) { stack.push(id); history.pushState({ n: stack.length }, ""); show(id); }
+function back() { history.back(); }
+addEventListener("popstate", () => {
+  if ($("help").classList.contains("on")) { closeHelp(true); return; }
+  if (stack.length > 1) stack.pop();
+  show(stack[stack.length - 1]);
+});
+function openHelp() { $("help").classList.add("on"); history.pushState({ help: 1 }, ""); }
+function closeHelp(fromBack) { if (fromBack) $("help").classList.remove("on"); else history.back(); }
+
+// ---------- Meetings data (one file, read once) ----------
+let DATA = null, TOWNS = [];
+const ready = fetch("data/meetings.json").then((r) => r.json()).then((j) => {
+  DATA = j;
+  const t = {};
+  for (const m of j.meetings) if (m.m !== 1 && m.c && m.la) {
+    const k = m.c.trim().replace(/\s+/g, " "); const key = k.toLowerCase();
+    (t[key] ||= { n: k, la: 0, lo: 0, c: 0 }); t[key].la += m.la; t[key].lo += m.lo; t[key].c++;
+  }
+  TOWNS = Object.values(t).map((x) => ({ n: x.n, la: x.la / x.c, lo: x.lo / x.c })).sort((a, b) => a.n.localeCompare(b.n));
+  $("towns").innerHTML = TOWNS.map((x) => `<option value="${esc(x.n)}">`).join("");
+}).catch(() => { DATA = { meetings: [], sources: [] }; });
+
+// ---------- Topic list ----------
+$("catList").innerHTML = Object.entries(CATS).filter(([k]) => k !== "all").map(([k, c]) =>
+  `<button class="opt" onclick="openCat('${k}')"><span class="e">${c.e}</span>${esc(c.t)}<span class="arr">›</span></button>`).join("") +
+  `<button class="opt soft" onclick="go('guide')"><span class="e">💭</span>Not sure?<span class="arr">›</span></button>`;
+$("guideList").innerHTML = Object.entries(CATS).map(([k, c]) =>
+  `<button class="opt" onclick="openCat('${k}')"><span class="e">${c.e}</span>${esc(c.t)}<span class="arr">›</span></button>`).join("");
+
+// ---------- Results ----------
+const S = { cat: "all", mode: "near", day: "today", here: null, place: "", limit: 25, list: [] };
+async function openCat(k) {
+  S.cat = k; S.limit = 25;
+  const c = CATS[k];
+  $("resTitle").textContent = c.t;
+  $("resIntro").textContent = c.intro;
+  $("resApp").style.display = c.f.length ? "" : "none";
+  $("resShare").style.display = k === "worried" ? "" : "none";
+  $("offTitle").textContent = c.f.length ? "More meetings on official sites" : "Find meetings";
+  $("offList").innerHTML = c.links.concat(MORE[k] || []).map(linkHTML).join("");
+  $("resFoot").innerHTML = `<h3 style="text-align:left">Talk to someone</h3>` + c.help.map(telHTML).join("") +
+    `<p style="margin-top:14px">Lantern isn't part of, or endorsed by, any fellowship. Always check the official listing before you travel.</p>`;
+  go("results");
+  ste("track", "play");
+  await ready;
+  // Topics with no in-person meetings in Lantern's own list open on "Online"
+  const near = DATA.meetings.some((m) => c.f.includes(m.f) && m.m !== 1);
+  $("modeSeg").style.display = near ? "" : "none";
+  S.mode = near ? "near" : "online";
+  seg("modeSeg", S.mode);
+  render();
+}
+$("modeSeg").onclick = (e) => { const v = e.target.dataset.v; if (!v) return; S.mode = v; S.limit = 25; seg("modeSeg", v); render(); };
+$("daySeg").onclick = (e) => { const v = e.target.dataset.v; if (!v) return; S.day = v; S.limit = 25; seg("daySeg", v); render(); };
+const seg = (id, v) => $(id).querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.v === v));
+$("town").addEventListener("change", pickTown);
+$("town").addEventListener("keydown", (e) => { if (e.key === "Enter") { pickTown(); e.target.blur(); } });
+function pickTown() {
+  const q = $("town").value.trim().toLowerCase(); if (!q) return;
+  const t = TOWNS.find((x) => x.n.toLowerCase() === q) || TOWNS.find((x) => x.n.toLowerCase().startsWith(q)) || TOWNS.find((x) => x.n.toLowerCase().includes(q));
+  if (!t) { $("resNote").textContent = "We couldn't find that town. Try a nearby bigger town, or use your location."; return; }
+  $("town").value = t.n; S.here = [t.la, t.lo]; S.place = t.n; S.limit = 25; render();
+}
+function useGPS() {
+  if (!navigator.geolocation) { $("resNote").textContent = "Your phone didn't share a location. Type a town instead."; return; }
+  $("resNote").textContent = "Finding where you are… (this stays on your phone)";
+  navigator.geolocation.getCurrentPosition((p) => {
+    S.here = [p.coords.latitude, p.coords.longitude]; S.place = "your location"; $("town").value = ""; S.limit = 25; render();
+  }, () => { $("resNote").textContent = "Location is off. Type a town instead."; }, { maximumAge: 600000, timeout: 15000 });
+}
+function showMore() { S.limit += 25; render(); }
+
+function render() {
+  if (!DATA) return;
+  const c = CATS[S.cat], now = new Date(), today = now.getDay(), nowMin = now.getHours() * 60 + now.getMinutes();
+  $("whereBox").style.display = S.mode === "near" ? "" : "none";
+  const wantDay = S.day === "today" ? today : S.day === "tomorrow" ? (today + 1) % 7 : null;
+  let list = DATA.meetings.filter((m) => c.f.includes(m.f) && (S.mode === "online" ? m.m !== 0 : m.m !== 1) && (wantDay == null || m.d === wantDay));
+  // Today: hide meetings that have already finished
+  if (S.day === "today") list = list.filter((m) => (m.e ? mins(m.e) > mins(m.t) ? mins(m.e) : 1440 : mins(m.t) + 60) > nowMin);
+  // "Soonest first" order: minutes from now until the meeting starts
+  const until = (m) => { let d = (m.d - today + 7) % 7 * 1440 + mins(m.t) - nowMin; if (d < -90) d += 7 * 1440; return d; };
+  let note = "";
+  if (S.mode === "near") {
+    if (!S.here) {
+      $("resList").innerHTML = `<div class="empty">Type a town or tap <b>Use my location</b> to see meetings near you.<br><small>Your location stays on your phone.</small></div>`;
+      $("resNote").textContent = ""; $("moreBtn").style.display = "none"; return;
+    }
+    list.forEach((m) => (m._k = km(S.here[0], S.here[1], m.la, m.lo)));
+    let r = 15; while (r < 120 && list.filter((m) => m._k <= r).length < 8) r *= 2;
+    list = list.filter((m) => m._k <= r);
+    list.sort((a, b) => S.day === "any" ? a._k - b._k : until(a) - until(b) || a._k - b._k);
+    note = `${list.length} within ${r} km of ${S.place}`;
+  } else {
+    list.sort((a, b) => until(a) - until(b));
+    note = `${list.length} online meetings · times are Irish and UK time`;
+  }
+  S.list = list;
+  $("resNote").textContent = list.length ? note : "";
+  $("resList").innerHTML = list.length ? list.slice(0, S.limit).map((m, i) => card(m, i, until(m))).join("") :
+    `<div class="empty">No ${S.mode === "online" ? "online " : ""}meetings ${S.day === "any" ? "found" : S.day === "today" ? "left today" : "tomorrow"} here.${S.day !== "any" ? " Try <b>Any day</b>," : " Try"} or the official finders below.</div>`;
+  $("moreBtn").style.display = list.length > S.limit ? "" : "none";
+}
+function card(m, i, u) {
+  const F = FELLOW[m.f];
+  const when = u >= -90 && u < 0 ? `<span class="soon">On now</span>` : u >= 0 && u <= 120 && S.day !== "any" ? `<span class="soon">In ${u < 60 ? u + " min" : Math.round(u / 60) + " hr"}</span>` : "";
+  return `<button class="card" onclick="openMeeting(${i})"><div class="row"><span class="time">${S.day === "any" ? DAYS[m.d].slice(0, 3) + " " : ""}${nice(m.t)}</span><span class="name">${esc(m.n)}</span></div>
+    <div class="meta"><span class="badge" style="background:${F.c}">${F.s}</span>${when}${m._k != null && S.mode === "near" ? `<span>${away(m._k)}</span>` : ""}${m.c && S.mode === "near" ? `<span>${esc(m.c)}</span>` : ""}${m.m === 2 ? "<span>Also online</span>" : ""}</div></button>`;
+}
+
+// ---------- One meeting ----------
+function openMeeting(i) {
+  const m = S.list[i], F = FELLOW[m.f];
+  const src = DATA.sources.find((s) => s.id === m.s);
+  const maps = m.la ? `https://www.google.com/maps/search/?api=1&query=${m.la},${m.lo}` : "";
+  $("detail").innerHTML = `<span class="badge" style="background:${F.c}">${F.s}</span> <small>${esc(F.n)}</small>
+    <h2>${esc(m.n)}</h2>
+    <div class="when">${DAYS[m.d]}s · ${nice(m.t)}${m.e ? " – " + nice(m.e) : ""}</div>
+    ${m.m !== 1 ? `<p>${esc(m.a)}${m.c && !m.a.includes(m.c) ? ", " + esc(m.c) : ""}</p>` : `<p>Online meeting</p>`}
+    ${m.g.length ? `<div class="chips">${m.g.map((t) => `<span>${esc(TAG[t] || t)}</span>`).join("")}</div>` : ""}
+    <div class="stack">
+      ${maps ? `<a class="btn" href="${maps}" target="_blank" rel="noopener">Directions</a>` : ""}
+      ${m.u ? `<a class="btn${maps ? " ghost" : ""}" href="${esc(m.u)}" target="_blank" rel="noopener">Join online</a>` : ""}
+      <a class="btn ghost" href="${esc(m.l || src?.site || "#")}" target="_blank" rel="noopener">Full details on the official site ↗</a>
+    </div>
+    <p class="care">First time? You're welcome to just sit and listen. It's a good idea to arrive a few minutes early.<br>
+    Meetings sometimes change, so check the official listing before you travel.${src?.updated ? `<br>Listing from ${esc(src.name)}, checked ${esc(src.updated)}.` : ""}</p>`;
+  go("meeting");
+}
+
+// ---------- Share Lantern ----------
+const SHARE_URL = "https://thespectrumtechengine.com/lantern/";
+const SHARE_TEXT = "Lantern: free recovery meetings across Ireland and the UK, near you and online. Private, no sign-up.";
+async function shareApp() {
+  ste("track", "share");
+  if (navigator.share) {
+    try { await navigator.share({ title: "Lantern: Find the Light", text: SHARE_TEXT, url: SHARE_URL }); return; }
+    catch (e) { if (e.name === "AbortError") return; }
+  }
+  const msg = encodeURIComponent(SHARE_TEXT + " " + SHARE_URL);
+  $("shareList").innerHTML =
+    `<a class="opt" href="https://wa.me/?text=${msg}" target="_blank" rel="noopener"><span class="e">💬</span>WhatsApp<span class="arr">↗</span></a>` +
+    `<a class="opt" href="sms:?&body=${msg}"><span class="e">✉️</span>Text message<span class="arr">↗</span></a>` +
+    `<a class="opt" href="mailto:?subject=${encodeURIComponent("Thought this might help")}&body=${msg}"><span class="e">📧</span>Email<span class="arr">↗</span></a>` +
+    `<button class="opt" onclick="copyLink()"><span class="e">🔗</span>Copy link<span class="arr"></span></button>`;
+  $("shareMsg").textContent = "";
+  $("shareSheet").classList.add("on");
+}
+function closeShare() { $("shareSheet").classList.remove("on"); }
+async function copyLink() {
+  try { await navigator.clipboard.writeText(SHARE_URL); $("shareMsg").textContent = "Link copied. Paste it anywhere."; }
+  catch (e) { $("shareMsg").textContent = SHARE_URL; }
+}
+
+// ---------- Help sheet and About ----------
+const AREA = { all: "Ireland and the UK", ie: "Ireland", ni: "Northern Ireland", uk: "UK" };
+$("helpList").innerHTML = ["all", "ie", "ni", "uk"].map((a) =>
+  `<h3>${AREA[a]}</h3>` + Object.keys(H).filter((k) => H[k][3] === a).map(telHTML).join("")).join("");
+ready.then(() => {
+  $("srcList").innerHTML = DATA.sources.map((s) =>
+    `<a class="opt" href="${esc(s.site)}" target="_blank" rel="noopener"><span>${esc(s.name)}<small>Checked ${esc(s.updated || "–")}</small></span><span class="arr">↗</span></a>`).join("");
+});
+</script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});</script>
+</body>
+</html>

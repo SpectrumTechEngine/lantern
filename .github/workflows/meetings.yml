@@ -1,0 +1,35 @@
+# Every night, collect the latest meetings from the fellowships' open lists into data/meetings.json.
+# If anything changed, it's saved to the repo and the website shows it straight away.
+name: Update meetings
+
+on:
+  schedule:
+    - cron: '17 3 * * *' # 03:17 UTC every day
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: meetings
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      - name: Collect meetings
+        run: node tools/fetch-meetings.mjs
+
+      - name: Save if changed
+        run: |
+          git add data/meetings.json
+          if git diff --cached --quiet; then echo "No changes"; exit 0; fi
+          git -c user.name=SpectrumTechEngine -c user.email=eire_ste@hotmail.com commit -m "Update meetings"
+          git push
