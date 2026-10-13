@@ -88,6 +88,9 @@
   .intro{color:var(--soft);margin-bottom:14px}
   .seg{display:flex;background:var(--chip);border-radius:14px;padding:4px;gap:4px;margin-bottom:10px}
   .seg button{flex:1;border:0;background:none;padding:10px 6px;border-radius:11px;font-weight:700;cursor:pointer;color:var(--soft)}
+  .seg.dist{align-items:center}
+  .seg.dist span{padding:0 4px 0 8px;font-size:.85rem;font-weight:700;color:var(--soft)}
+  .seg.dist button{padding:8px 0;font-size:.82rem;white-space:nowrap}
   .seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 4px #0002}
   .where{display:flex;gap:8px;margin-bottom:10px}
   .where input{flex:1;min-width:0;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:11px 12px;font:inherit}
@@ -193,6 +196,9 @@
       <input id="town" list="towns" placeholder="Type a town" autocomplete="off" aria-label="Town">
       <datalist id="towns"></datalist>
       <button onclick="useGPS()">📍 Use my location</button>
+    </div>
+    <div class="seg dist" id="distSeg">
+      <span>Within</span><button data-v="5">5 km</button><button data-v="10">10 km</button><button data-v="25" class="on">25 km</button><button data-v="50">50 km</button><button data-v="100">100 km</button>
     </div>
     <div class="seg" id="daySeg">
       <button data-v="today" class="on">Today</button><button data-v="tomorrow">Tomorrow</button><button data-v="any">Any day</button>
@@ -388,7 +394,7 @@ $("guideList").innerHTML = Object.entries(CATS).map(([k, c]) =>
   `<button class="opt" onclick="openCat('${k}')"><span class="e">${c.e}</span>${esc(c.t)}<span class="arr">›</span></button>`).join("");
 
 // ---------- Results ----------
-const S = { cat: "all", mode: "near", day: "today", here: null, place: "", limit: 25, list: [] };
+const S = { cat: "all", mode: "near", day: "today", here: null, place: "", r: 25, limit: 25, list: [] };
 async function openCat(k) {
   S.cat = k; S.limit = 25;
   const c = CATS[k];
@@ -406,6 +412,7 @@ async function openCat(k) {
   render();
 }
 $("modeSeg").onclick = (e) => { const v = e.target.dataset.v; if (!v) return; S.mode = v; S.limit = 25; seg("modeSeg", v); render(); };
+$("distSeg").onclick = (e) => { const v = e.target.dataset.v; if (!v) return; S.r = +v; S.limit = 25; seg("distSeg", v); render(); };
 $("daySeg").onclick = (e) => { const v = e.target.dataset.v; if (!v) return; S.day = v; S.limit = 25; seg("daySeg", v); render(); };
 const seg = (id, v) => $(id).querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.v === v));
 $("town").addEventListener("change", pickTown);
@@ -433,7 +440,7 @@ function render() {
   const hasOnline = DATA.meetings.some((m) => c.f.includes(m.f) && m.m !== 0);
   const inApp = S.mode === "near" ? hasNear : S.mode === "online" ? hasOnline : hasNear || hasOnline;
   // Same controls on every topic: town box for Near me and Both, days always
-  $("whereBox").style.display = S.mode !== "online" ? "" : "none";
+  $("whereBox").style.display = $("distSeg").style.display = S.mode !== "online" ? "" : "none";
   $("offTitle").textContent = inApp ? "More meetings on official sites" : "Find meetings";
   if (!inApp) {
     const place = S.here ? esc(S.place) : "you";
@@ -465,8 +472,7 @@ function render() {
       $("resNote").textContent = ""; $("moreBtn").style.display = "none"; return;
     }
     list.forEach((m) => (m._k = m.m === 1 ? null : km(S.here[0], S.here[1], m.la, m.lo)));
-    const inPerson = list.filter((m) => m._k != null);
-    let r = 15; while (r < 120 && inPerson.filter((m) => m._k <= r).length < 8) r *= 2;
+    const r = S.r; // the distance the person picked
     // Near me: in person within r km. Both: those plus every online meeting
     list = list.filter((m) => (m._k != null && m._k <= r) || (S.mode === "both" && m.m !== 0));
     if (S.mode === "both") {
@@ -486,7 +492,8 @@ function render() {
   S.list = list;
   $("resNote").textContent = list.length ? note : "";
   $("resList").innerHTML = ask + (list.length ? list.slice(0, S.limit).map((m, i) => card(m, i, until(m))).join("") :
-    `<div class="empty">No ${S.mode === "online" ? "online " : ""}meetings ${S.day === "any" ? "found" : S.day === "today" ? "left today" : "tomorrow"} here.${S.day !== "any" ? " Try <b>Any day</b>," : " Try"} or the official finders below.</div>`);
+    `<div class="empty">No ${S.mode === "online" ? "online " : ""}meetings ${S.day === "any" ? "found" : S.day === "today" ? "left today" : "tomorrow"}${S.mode !== "online" && S.here ? ` within ${S.r} km of ${esc(S.place)}` : " here"}.
+      Try ${S.mode !== "online" && S.r < 100 ? "a bigger distance, " : ""}${S.day !== "any" ? "<b>Any day</b>, " : ""}or the official finders below.</div>`);
   $("moreBtn").style.display = list.length > S.limit ? "" : "none";
 }
 function card(m, i, u) {
