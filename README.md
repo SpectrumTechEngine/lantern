@@ -1,7 +1,7 @@
 # Lantern: Find the Light
 
 Free recovery meetings across Ireland and the UK, in person and online, all in one place.
-Live at https://thespectrumtechengine.com/lantern/
+Live at https://lanternrooms.org/
 
 - `index.html`: the whole app.
 - `data/meetings.json`: the meeting list. It's refreshed every night by `.github/workflows/meetings.yml`, which runs `tools/fetch-meetings.mjs`.

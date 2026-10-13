@@ -4,7 +4,7 @@
   "webDir": "www",
   "backgroundColor": "#1d2238",
   "server": {
-    "url": "https://thespectrumtechengine.com/lantern/",
+    "url": "https://lanternrooms.org/",
     "errorPath": "index.html"
   }
 }

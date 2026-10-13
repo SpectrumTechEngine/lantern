@@ -8,7 +8,7 @@ import path from "node:path";
 const here = path.dirname(new URL(import.meta.url).pathname.replace(/^\/(\w:)/, "$1"));
 const OUT = path.resolve(here, "..", "data", "meetings.json");
 const LOCAL_TZ = /^Europe\/(London|Dublin|Belfast)$/; // online meetings: only ones held on Irish/UK time
-const UA = { "User-Agent": "Lantern meeting finder (thespectrumtechengine.com/lantern)" };
+const UA = { "User-Agent": "Lantern meeting finder (lanternrooms.org)" };
 
 const getJSON = async (url) => {
   const r = await fetch(url, { headers: UA });

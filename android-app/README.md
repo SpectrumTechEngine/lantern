@@ -2,7 +2,7 @@
 
 This folder turns Lantern into an Android APK. You don't need to touch it.
 
-- The app opens the live website at thespectrumtechengine.com/lantern/, so changes
+- The app opens the live website at lanternrooms.org, so changes
   you push to the website show up in the app straight away.
 - With no signal it shows a "No signal" screen (`offline.html`) with a Try again button.
 - Every push to `main` runs `.github/workflows/android-apk.yml`, which builds a
