@@ -156,9 +156,9 @@ for (const [k, c] of Object.entries(CATS)) {
   urls.push(url);
   const ours = c.f.length ? `<p>Lantern also lists ${esc(listNames(c.f).join(" and "))} meetings itself: <a href="/meetings/">by town</a> or <a href="/meetings/online/">online</a>.</p>` : "";
   out.set(`help/${k}/index.html`, page({
-    url, title: `${k === "worried" ? "Worried about someone's drinking, drugs or gambling?" : `Support for ${c.t.toLowerCase()}`}: meetings and helplines in Ireland and the UK | Lantern`,
+    url, title: `${k === "worried" ? "Worried about someone's drinking, drugs or gambling?" : `Support for ${k === "food" ? "food and eating disorders" : c.t.toLowerCase()}`}: meetings and helplines in Ireland and the UK | Lantern`,
     desc: `${c.intro} Free meetings near you and online, plus helplines, across Ireland and the UK.`,
-    h1: k === "worried" ? "Worried about someone?" : `Support for ${c.t.toLowerCase()}`,
+    h1: k === "worried" ? "Worried about someone?" : `Support for ${k === "food" ? "food and eating disorders" : c.t.toLowerCase()}`,
     crumbs: [["Lantern", "/"], [c.t]],
     body: `<p class="lead">${esc(c.intro)}</p>
 <p><a class="btn" href="/?topic=${k}">Find a meeting in the Lantern app →</a></p>
