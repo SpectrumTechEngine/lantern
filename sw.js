@@ -1,5 +1,5 @@
 // Lantern: keeps a copy of the app (and the last meeting list) so it opens without internet, and always fetches the newest version when online.
-const C = 'lantern-v2';
+const C = 'lantern-v3';
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => {
   e.waitUntil(caches.keys().then((k) => Promise.all(k.filter((x) => x !== C).map((x) => caches.delete(x)))).then(() => self.clients.claim()));

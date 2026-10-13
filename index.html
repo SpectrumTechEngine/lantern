@@ -379,19 +379,14 @@ async function openCat(k) {
   const c = CATS[k];
   $("resTitle").textContent = c.t;
   $("resIntro").textContent = c.intro;
-  $("resApp").style.display = c.f.length ? "" : "none";
   $("resShare").style.display = k === "worried" ? "" : "none";
-  $("offTitle").textContent = c.f.length ? "More meetings on official sites" : "Find meetings";
   $("offList").innerHTML = c.links.concat(MORE[k] || []).map(linkHTML).join("");
   $("resFoot").innerHTML = `<h3 style="text-align:left">Talk to someone</h3>` + c.help.map(telHTML).join("") +
     `<p style="margin-top:14px">Lantern isn't part of, or endorsed by, any fellowship. Always check the official listing before you travel.</p>`;
   go("results");
   ste("track", "play");
   await ready;
-  // Topics with no in-person meetings in Lantern's own list open on "Online"
-  const near = DATA.meetings.some((m) => c.f.includes(m.f) && m.m !== 1);
-  $("modeSeg").style.display = near ? "" : "none";
-  S.mode = near ? "near" : "online";
+  S.mode = "near";
   seg("modeSeg", S.mode);
   render();
 }
@@ -418,7 +413,19 @@ function showMore() { S.limit += 25; render(); }
 function render() {
   if (!DATA) return;
   const c = CATS[S.cat], now = new Date(), today = now.getDay(), nowMin = now.getHours() * 60 + now.getMinutes();
-  $("whereBox").style.display = S.mode === "online" ? "none" : "";
+  // Does Lantern's own list have meetings of this kind? If not, point to the official finders below.
+  const hasNear = DATA.meetings.some((m) => c.f.includes(m.f) && m.m !== 1);
+  const hasOnline = DATA.meetings.some((m) => c.f.includes(m.f) && m.m !== 0);
+  const inApp = S.mode === "near" ? hasNear : S.mode === "online" ? hasOnline : hasNear || hasOnline;
+  $("whereBox").style.display = S.mode !== "online" && hasNear ? "" : "none";
+  $("daySeg").style.display = inApp ? "" : "none";
+  $("offTitle").textContent = inApp ? "More meetings on official sites" : "Find meetings";
+  if (!inApp) {
+    const what = S.mode === "near" ? "meetings near you" : S.mode === "online" ? "online meetings" : "meetings near you and online";
+    $("resNote").textContent = ""; $("moreBtn").style.display = "none";
+    $("resList").innerHTML = `<div class="empty">These groups keep their own meeting lists.<br>Tap one below to see ${what} on their official site. ↓</div>`;
+    return;
+  }
   const wantDay = S.day === "today" ? today : S.day === "tomorrow" ? (today + 1) % 7 : null;
   // m.m: 0 in person, 1 online, 2 both
   let list = DATA.meetings.filter((m) => c.f.includes(m.f) && (S.mode === "online" ? m.m !== 0 : S.mode === "near" ? m.m !== 1 : true) && (wantDay == null || m.d === wantDay));
@@ -428,13 +435,14 @@ function render() {
   const until = (m) => { let d = (m.d - today + 7) % 7 * 1440 + mins(m.t) - nowMin; if (d < -90) d += 7 * 1440; return d; };
   let note = "";
   let ask = "";
-  if (S.mode === "both" && !S.here) {
-    // No town yet: show the online ones, and ask for a town to add nearby ones
+  if (S.mode === "both" && (!S.here || !hasNear)) {
+    // No town yet (or no in-person list here): show the online ones, and say how to add nearby ones
     list = list.filter((m) => m.m !== 0);
     list.forEach((m) => (m._k = null));
     list.sort((a, b) => until(a) - until(b));
     note = `${list.length} online meetings · times are Irish and UK time`;
-    ask = `<div class="empty">Type a town or tap <b>Use my location</b> to add meetings near you.</div>`;
+    ask = hasNear ? `<div class="empty">Type a town or tap <b>Use my location</b> to add meetings near you.</div>`
+      : `<div class="empty">For meetings near you, tap an official finder further down. ↓</div>`;
   } else if (S.mode !== "online") {
     if (!S.here) {
       $("resList").innerHTML = `<div class="empty">Type a town or tap <b>Use my location</b> to see meetings near you.<br><small>Your location stays on your phone.</small></div>`;
