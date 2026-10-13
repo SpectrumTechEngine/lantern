@@ -75,7 +75,7 @@ const CATS = {
              links: ["naIE", "ukna", "vna", "caIE", "caUK", "cma", "ma", "smartIE", "smartUK"], help: ["hse", "frank", "ukna", "samaritans", "lifeline"] },
   gambling:{ e: "🎲", t: "Gambling", f: [], intro: "Gamblers Anonymous meets across Ireland and the UK. Tap below to see their meetings near you.",
              links: ["gaIE", "gaUK", "smartIE", "smartUK"], help: ["gamcare", "gamIE", "externIE", "externNI", "samaritans"] },
-  food:    { e: "🍎", t: "Food", f: [], intro: "For any struggle with food or eating, including eating disorders like anorexia, bulimia and binge eating. Bodywhys (Ireland) and Beat (UK) run free support groups and helplines, for you or someone you love.",
+  food:    { e: "🍎", t: "Food and eating", f: [], intro: "For any struggle with food or eating, including eating disorders like anorexia, bulimia and binge eating. Bodywhys (Ireland) and Beat (UK) run free support groups and helplines, for you or someone you love.",
              links: ["bodywhys", "beat", "eda", "oaIE", "oaGB"], help: ["bodywhys", "beatNI", "beat", "beatSC", "beatWA", "samaritans"] },
   sex:     { e: "💞", t: "Sex and relationships", f: ["slaa", "coda"], intro: "Groups for sex, love, porn and relationship patterns that have become painful.",
              links: ["slaa", "saa", "sa", "coda"], help: ["samaritans", "lifeline"] },
