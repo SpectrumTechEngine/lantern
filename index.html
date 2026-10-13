@@ -459,19 +459,24 @@ function render() {
   const until = (m) => { let d = (m.d - today + 7) % 7 * 1440 + mins(m.t) - nowMin; if (d < -90) d += 7 * 1440; return d; };
   let note = "";
   let ask = "";
-  if (S.mode === "both" && (!S.here || !hasNear)) {
-    // No town yet (or no in-person list here): show the online ones, and say how to add nearby ones
+  const finders = `<div class="empty">These groups keep their own lists of meetings near ${S.here ? esc(S.place) : "you"}. Tap an official finder further down. ↓</div>`;
+  if (S.mode !== "online" && !S.here) {
+    // No town yet: the whole list, soonest first, just like the online list
+    list.forEach((m) => (m._k = null));
+    list.sort((a, b) => until(a) - until(b));
+    const inPerson = list.filter((m) => m.m !== 1).length;
+    note = !inPerson ? `${list.length} online meetings · times are Irish and UK time`
+      : S.mode === "both" ? `${inPerson} in person and ${list.length - inPerson} online · add a town to see what's near you`
+      : `${list.length} in person across Ireland and the UK · add a town to see what's near you`;
+    if (!hasNear) ask = finders;
+  } else if (S.mode === "both" && !hasNear) {
+    // No in-person list for these groups: online ones here, official finders for nearby
     list = list.filter((m) => m.m !== 0);
     list.forEach((m) => (m._k = null));
     list.sort((a, b) => until(a) - until(b));
     note = `${list.length} online meetings · times are Irish and UK time`;
-    ask = hasNear ? `<div class="empty">Type a town or tap <b>Use my location</b> to add meetings near you.</div>`
-      : `<div class="empty">These groups keep their own lists of meetings near ${S.here ? esc(S.place) : "you"}. Tap an official finder further down. ↓</div>`;
+    ask = finders;
   } else if (S.mode !== "online") {
-    if (!S.here) {
-      $("resList").innerHTML = `<div class="empty">Type a town or tap <b>Use my location</b> to see meetings near you.<br><small>Your location stays on your phone.</small></div>`;
-      $("resNote").textContent = ""; $("moreBtn").style.display = "none"; return;
-    }
     list.forEach((m) => (m._k = m.m === 1 ? null : km(S.here[0], S.here[1], m.la, m.lo)));
     const r = S.r; // the distance the person picked
     // Near me: in person within r km. Both: those plus every online meeting
@@ -501,7 +506,7 @@ function card(m, i, u) {
   const F = FELLOW[m.f];
   const when = u >= -90 && u < 0 ? `<span class="soon">On now</span>` : u >= 0 && u <= 120 && S.day !== "any" ? `<span class="soon">In ${u < 60 ? u + " min" : Math.round(u / 60) + " hr"}</span>` : "";
   return `<button class="card" onclick="openMeeting(${i})"><div class="row"><span class="time">${S.day === "any" ? DAYS[m.d].slice(0, 3) + " " : ""}${nice(m.t)}</span><span class="name">${esc(m.n)}</span></div>
-    <div class="meta"><span class="badge" style="background:${F.c}">${F.w} · ${F.s}</span>${when}${m._k != null && S.mode !== "online" ? `<span>${away(m._k)}</span>` : ""}${m.c && m._k != null && S.mode !== "online" ? `<span>${esc(m.c)}</span>` : ""}${m._k == null && S.mode === "both" ? "<span>💻 Online</span>" : ""}${m.m === 2 && m._k != null ? "<span>Also online</span>" : ""}</div></button>`;
+    <div class="meta"><span class="badge" style="background:${F.c}">${F.w} · ${F.s}</span>${when}${m._k != null && S.mode !== "online" ? `<span>${away(m._k)}</span>` : ""}${m.c && m.m !== 1 && S.mode !== "online" ? `<span>${esc(m.c)}</span>` : ""}${S.mode === "both" && (m.m === 1 || (m.m === 2 && S.here && m._k == null)) ? "<span>💻 Online</span>" : m.m === 2 ? "<span>Also online</span>" : ""}</div></button>`;
 }
 
 // ---------- One meeting ----------
