@@ -16,7 +16,7 @@ const SITE = "https://lanternrooms.org";
 const MIN_MEETINGS = 2; // a town needs at least this many in-person meetings a week to get a page
 
 const ctx = vm.createContext({});
-const { FELLOW, L, H, CATS, DAYS, TAG } = vm.runInContext(fs.readFileSync(path.join(ROOT, "info.js"), "utf8") + ";({FELLOW,L,H,CATS,DAYS,TAG})", ctx);
+const { FELLOW, L, H, CATS, DAYS, TAG, COUNTRY, moveTZ } = vm.runInContext(fs.readFileSync(path.join(ROOT, "info.js"), "utf8") + ";({FELLOW,L,H,CATS,DAYS,TAG,COUNTRY,moveTZ})", ctx);
 const { meetings } = JSON.parse(fs.readFileSync(path.join(ROOT, "data", "meetings.json"), "utf8"));
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -27,7 +27,17 @@ const WEEK = [1, 2, 3, 4, 5, 6, 0]; // Monday first
 const onIreland = (la, lo) => lo < -5.4 && la > 51.2 && la < 55.5; // island of Ireland (incl. Northern Ireland)
 
 // Group the many ways towns are written into one page each ("Rialto, Dublin 8" -> Dublin)
-const pageTown = (c) => /\bDublin\b/i.test(c) ? "Dublin" : /^London\b/i.test(c) ? "London" : c.split(",")[0].trim();
+// Outside Ireland and the UK the country goes on the end: "Perth, Australia" (not Perth in Scotland)
+const pageTown = (m) => m.k ? `${m.c.split(",")[0].trim()}, ${COUNTRY[m.k]}`
+  : /\bDublin\b/i.test(m.c) ? "Dublin" : /^London\b/i.test(m.c) ? "London" : m.c.split(",")[0].trim();
+// Finders and helplines on a town page, by country
+const LOCAL = {
+  ie: { aa: ["aaIE", "caIE", "gaIE", "oaIE", "smartIE", "alanon", "gamanonIE"], help: ["samaritans", "hse", "lifeline", "gamIE"] },
+  uk: { aa: ["aaGB", "caUK", "gaUK", "oaGB", "smartUK", "alanon", "gamanonUK"], help: ["samaritans", "frank", "drinkline", "gamcare"] },
+  ca: { aa: ["aaCA", "naCA", "vna", "oiaa"], help: ["emergencyCA", "crisisCA"] },
+  au: { aa: ["aaAU", "naAU", "vna", "oiaa"], help: ["emergencyAU", "lifelineAU", "adhAU"] },
+  nz: { aa: ["aaNZ", "naNZ", "vna", "oiaa"], help: ["emergencyNZ", "needToTalk", "adhNZ"] },
+};
 
 // ---------- Shared page frame ----------
 const page = ({ url, title, desc, h1, body, crumbs = [] }) => `<!doctype html>
@@ -89,19 +99,18 @@ const urls = ["/", "/meetings/", "/meetings/online/", "/poster/"];
 const towns = new Map();
 for (const m of meetings) {
   if (m.m === 1 || !m.c || m.la == null) continue;
-  const name = pageTown(m.c), key = slug(name);
+  const name = pageTown(m), key = slug(name);
   if (!key) continue;
-  if (!towns.has(key)) towns.set(key, { name, key, list: [], la: 0, lo: 0 });
+  if (!towns.has(key)) towns.set(key, { name, key, list: [], la: 0, lo: 0, k: m.k });
   const t = towns.get(key); t.list.push(m); t.la += m.la; t.lo += m.lo;
 }
 const kept = [...towns.values()].filter((t) => t.list.length >= MIN_MEETINGS);
-for (const t of kept) { t.la /= t.list.length; t.lo /= t.list.length; t.ie = onIreland(t.la, t.lo); }
+for (const t of kept) { t.la /= t.list.length; t.lo /= t.list.length; t.ie = !t.k && onIreland(t.la, t.lo); t.area = t.k || (t.ie ? "ie" : "uk"); }
 
 for (const t of kept) {
   const groups = listNames([...new Set(t.list.map((m) => m.f))]);
   const near = kept.filter((o) => o !== t).map((o) => [o, km(t.la, t.lo, o.la, o.lo)]).sort((a, b) => a[1] - b[1]).slice(0, 8);
-  const help = t.ie ? ["samaritans", "hse", "lifeline", "gamIE"] : ["samaritans", "frank", "drinkline", "gamcare"];
-  const aa = t.ie ? ["aaIE", "caIE", "gaIE", "oaIE", "smartIE", "alanon", "gamanonIE"] : ["aaGB", "caUK", "gaUK", "oaGB", "smartUK", "alanon", "gamanonUK"];
+  const { help, aa } = LOCAL[t.area];
   const url = `/meetings/${t.key}/`;
   urls.push(url);
   out.set(`meetings/${t.key}/index.html`, page({
@@ -122,8 +131,8 @@ ${helplines(help)}
   }));
 }
 
-// Online meetings
-const online = meetings.filter((m) => m.m !== 0 && m.u);
+// Online meetings (times moved to Irish and UK time)
+const online = meetings.filter((m) => m.m !== 0 && m.u).map((m) => moveTZ(m, "Europe/London"));
 out.set("meetings/online/index.html", page({
   url: "/meetings/online/", title: "Online recovery meetings on Irish and UK time | Lantern",
   desc: `${online.length} online recovery meetings a week on Irish and UK time: AA, NA, CoDA, SLAA and more. Join from anywhere. Free, private, no sign-up.`,
@@ -137,27 +146,29 @@ ${byDay(online, true)}`,
 // Town index
 const az = (list) => list.sort((a, b) => a.name.localeCompare(b.name)).map((t) => `<a href="/meetings/${t.key}/">${esc(t.name)}</a>`).join(" · ");
 out.set("meetings/index.html", page({
-  url: "/meetings/", title: "Recovery meetings by town in Ireland and the UK | Lantern",
-  desc: `Find recovery meetings in ${kept.length} towns and cities across Ireland and the UK: NA, CoDA, SLAA, CMA and links to AA, GA, OA and Al-Anon. Free, private, no sign-up.`,
+  url: "/meetings/", title: "Recovery meetings by town in Ireland, the UK, Canada, Australia and New Zealand | Lantern",
+  desc: `Find recovery meetings in ${kept.length} towns and cities: NA, CoDA, SLAA and CMA across Ireland and the UK, NA in Canada, and AA and NA in Australia and New Zealand. Free, private, no sign-up.`,
   h1: "Recovery meetings by town",
   crumbs: [["Lantern", "/"], ["Meetings by town"]],
   body: `<p class="lead">Pick a town to see its meetings by day. For meetings near you right now, <a href="/">open the Lantern app</a>.</p>
 <h2>Ireland and Northern Ireland</h2><p class="az">${az(kept.filter((t) => t.ie))}</p>
-<h2>England, Scotland and Wales</h2><p class="az">${az(kept.filter((t) => !t.ie))}</p>
+<h2>England, Scotland and Wales</h2><p class="az">${az(kept.filter((t) => t.area === "uk"))}</p>
+${Object.entries(COUNTRY).map(([k, n]) => `<h2>${n}</h2><p class="az">${az(kept.filter((t) => t.k === k))}</p>`).join("\n")}
 <h2>Online</h2><p><a href="/meetings/online/">Online meetings on Irish and UK time</a></p>`,
 }));
 
 // Help pages, one per topic
 const FIRST = `<h2>Going to your first meeting</h2>
 <p>You don't need to be sure of anything, and you don't have to say a word. Meetings are free, and nobody asks for your full name. <b>Open</b> meetings welcome anyone, including family and friends; <b>closed</b> meetings are for people who want help themselves.</p>`;
+const WHERE = (k) => k === "alcohol" || k === "drugs" ? "Ireland, the UK, Canada, Australia and New Zealand" : "Ireland and the UK";
 for (const [k, c] of Object.entries(CATS)) {
   if (k === "all") continue;
   const url = `/help/${k}/`;
   urls.push(url);
   const ours = c.f.length ? `<p>Lantern also lists ${esc(listNames(c.f).join(" and "))} meetings itself: <a href="/meetings/">by town</a> or <a href="/meetings/online/">online</a>.</p>` : "";
   out.set(`help/${k}/index.html`, page({
-    url, title: `${k === "worried" ? "Worried about someone's drinking, drugs or gambling?" : `Support for ${k === "food" ? "food and eating disorders" : c.t.toLowerCase()}`}: meetings and helplines in Ireland and the UK | Lantern`,
-    desc: `${c.intro} Free meetings near you and online, plus helplines, across Ireland and the UK.`,
+    url, title: `${k === "worried" ? "Worried about someone's drinking, drugs or gambling?" : `Support for ${k === "food" ? "food and eating disorders" : c.t.toLowerCase()}`}: meetings and helplines in ${WHERE(k)} | Lantern`,
+    desc: `${c.intro} Free meetings near you and online, plus helplines, across ${WHERE(k)}.`,
     h1: k === "worried" ? "Worried about someone?" : `Support for ${k === "food" ? "food and eating disorders" : c.t.toLowerCase()}`,
     crumbs: [["Lantern", "/"], [c.t]],
     body: `<p class="lead">${esc(c.intro)}</p>

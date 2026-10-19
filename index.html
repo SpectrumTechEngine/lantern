@@ -3,22 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Lantern: Find the Light · Recovery meetings in Ireland and the UK</title>
+<title>Lantern: Find the Light · Recovery meetings in Ireland, the UK, Canada, Australia and NZ</title>
 <link rel="canonical" href="https://lanternrooms.org/">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebApplication","name":"Lantern: Find the Light","url":"https://lanternrooms.org/",
- "description":"Free recovery meetings across Ireland and the UK, near you and online: alcohol, drugs, gambling, food, relationships, and support for families. Private, no sign-up.",
+ "description":"Free recovery meetings across Ireland and the UK, near you and online: alcohol, drugs, gambling, food, relationships, and support for families. Plus AA and NA meetings in Canada, Australia and New Zealand. Private, no sign-up.",
  "applicationCategory":"HealthApplication","operatingSystem":"Any","isAccessibleForFree":true,
- "offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"areaServed":["IE","GB"],
+ "offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"areaServed":["IE","GB","CA","AU","NZ"],
  "publisher":{"@type":"Organization","name":"The Spectrum Tech Engine","url":"https://thespectrumtechengine.com/"}}
 </script>
-<meta name="description" content="Free recovery meetings across Ireland and the UK, in person and online, all in one place. Private, no sign-up.">
+<meta name="description" content="Free recovery meetings across Ireland and the UK, plus AA and NA in Canada, Australia and New Zealand. In person and online, all in one place. Private, no sign-up.">
 <meta name="theme-color" content="#1d2238">
 <!-- Share card: what WhatsApp, Messages, Facebook etc. show when the link is shared -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="The Spectrum Tech Engine">
 <meta property="og:title" content="Lantern: Find the Light">
-<meta property="og:description" content="Recovery meetings near you and online, across Ireland and the UK. Free, private, no sign-up.">
+<meta property="og:description" content="Recovery meetings near you and online, across Ireland, the UK, Canada, Australia and New Zealand. Free, private, no sign-up.">
 <meta property="og:url" content="https://lanternrooms.org/">
 <meta property="og:image" content="https://lanternrooms.org/share-card.png">
 <meta property="og:image:width" content="1200">
@@ -246,7 +246,7 @@
 <!-- 6. About -->
 <section class="page guide" id="about">
   <div class="top"><button class="back" onclick="back()" aria-label="Back">←</button><h2>About Lantern</h2></div>
-  <p><b>Lantern is free and always will be.</b> It's made by The Spectrum Tech Engine to help people in Ireland and the UK find recovery meetings in one place.</p>
+  <p><b>Lantern is free and always will be.</b> It's made by The Spectrum Tech Engine to help people find recovery meetings in one place: every group across Ireland and the UK, and AA and NA in Canada, Australia and New Zealand.</p>
   <h3>Your privacy</h3>
   <p>No sign-up, no account. If you use your location, it stays on your phone and is only used to sort meetings by distance. Lantern never records which meetings or topics you look at.</p>
   <p>Lantern does count how many times it's opened and shared, so we know it's helping. Those counts have no names and nothing about what you looked at or where you are.</p>
@@ -260,7 +260,7 @@
 <div class="sheet" id="help" onclick="if(event.target===this)closeHelp()">
   <div class="box" role="dialog" aria-label="Talk to someone now">
     <h2>You can talk to someone now</h2>
-    <p class="note" style="margin-top:6px">Free and confidential. If someone is in danger, call 112 or 999.</p>
+    <p class="note" style="margin-top:6px">Free and confidential. If someone is in danger, call your emergency number: 112 or 999 in Ireland and the UK, 911 in Canada, 000 in Australia, 111 in New Zealand.</p>
     <div id="helpList"></div>
     <p class="note">Numbers checked October 2026.</p>
     <button class="btn ghost" onclick="closeHelp()">Close</button>
@@ -310,11 +310,21 @@ function closeHelp(fromBack) { if (fromBack) $("help").classList.remove("on"); e
 
 // ---------- Meetings data (one file, read once) ----------
 let DATA = null, TOWNS = [];
+// Which country this phone is in, roughly, from its time zone ("" = Ireland and the UK, or anywhere else)
+const HOME = (() => { const z = (Intl.DateTimeFormat().resolvedOptions().timeZone || "");
+  return /^Australia\//.test(z) ? "au" : /^Pacific\/(Auckland|Chatham)$/.test(z) ? "nz"
+    : /^America\/(Toronto|Montreal|Vancouver|Edmonton|Winnipeg|Regina|Halifax|St_Johns|Moncton|Glace_Bay|Whitehorse|Dawson|Yellowknife|Iqaluit)$/.test(z) ? "ca" : ""; })();
+const HOME_NAME = COUNTRY[HOME] || "Ireland and the UK";
+const mine = (k) => (HOME ? H[k][3] === HOME : !(H[k][3] in COUNTRY)) ? 1 : 0; // a helpline for this phone's country?
+// Town names outside Ireland and the UK carry their country: "Perth, Australia" (not Perth in Scotland)
+const townName = (m) => { const n = m.c.trim().replace(/\s+/g, " "); return m.k ? `${n}, ${COUNTRY[m.k]}` : n; };
 const ready = fetch("data/meetings.json").then((r) => r.json()).then((j) => {
+  // Online meetings: show their days and times in this phone's own time
+  j.meetings = j.meetings.map((m) => m.z ? moveTZ(m) : m);
   DATA = j;
   const t = {};
   for (const m of j.meetings) if (m.m !== 1 && m.c && m.la) {
-    const k = m.c.trim().replace(/\s+/g, " "); const key = k.toLowerCase();
+    const k = townName(m); const key = k.toLowerCase();
     (t[key] ||= { n: k, la: 0, lo: 0, c: 0 }); t[key].la += m.la; t[key].lo += m.lo; t[key].c++;
   }
   TOWNS = Object.values(t).map((x) => ({ n: x.n, la: x.la / x.c, lo: x.lo / x.c })).sort((a, b) => a.n.localeCompare(b.n));
@@ -337,7 +347,7 @@ async function openCat(k) {
   $("resIntro").textContent = c.intro;
   $("resShare").style.display = k === "worried" ? "" : "none";
   $("offList").innerHTML = c.links.concat(MORE[k] || []).map(linkHTML).join("");
-  $("resFoot").innerHTML = `<h3 style="text-align:left">Talk to someone</h3>` + c.help.map(telHTML).join("") +
+  $("resFoot").innerHTML = `<h3 style="text-align:left">Talk to someone</h3>` + [...c.help].sort((a, b) => mine(b) - mine(a)).map(telHTML).join("") +
     `<p style="margin-top:14px">Lantern isn't part of, or endorsed by, any fellowship. Always check the official listing before you travel.</p>`;
   go("results");
   ste("track", "play");
@@ -370,8 +380,10 @@ function showMore() { S.limit += 25; render(); }
 function render() {
   if (!DATA) return;
   const c = CATS[S.cat], now = new Date(), today = now.getDay(), nowMin = now.getHours() * 60 + now.getMinutes();
-  // Does Lantern's own list have meetings of this kind? If not, point to the official finders below.
-  const hasNear = DATA.meetings.some((m) => c.f.includes(m.f) && m.m !== 1);
+  // Does Lantern's own list have meetings of this kind here (near the town picked, or in this phone's country)?
+  // If not, point to the official finders below.
+  const hasNear = DATA.meetings.some((m) => c.f.includes(m.f) && m.m !== 1 &&
+    (S.here ? km(S.here[0], S.here[1], m.la, m.lo) <= 150 : (m.k || "") === HOME));
   const hasOnline = DATA.meetings.some((m) => c.f.includes(m.f) && m.m !== 0);
   const inApp = S.mode === "near" ? hasNear : S.mode === "online" ? hasOnline : hasNear || hasOnline;
   // Same controls on every topic: town box for Near me and Both, days always
@@ -395,20 +407,21 @@ function render() {
   let ask = "";
   const finders = `<div class="empty">These groups keep their own lists of meetings near ${S.here ? esc(S.place) : "you"}. Tap an official finder further down. ↓</div>`;
   if (S.mode !== "online" && !S.here) {
-    // No town yet: the whole list, soonest first, just like the online list
+    // No town yet: the whole list for this phone's country, soonest first, just like the online list
+    list = list.filter((m) => m.m === 1 || (m.k || "") === HOME);
     list.forEach((m) => (m._k = null));
     list.sort((a, b) => until(a) - until(b));
     const inPerson = list.filter((m) => m.m !== 1).length;
-    note = !inPerson ? `${list.length} online meetings · times are Irish and UK time`
+    note = !inPerson ? `${list.length} online meetings · times are your local time`
       : S.mode === "both" ? `${inPerson} in person and ${list.length - inPerson} online · add a town to see what's near you`
-      : `${list.length} in person across Ireland and the UK · add a town to see what's near you`;
+      : `${list.length} in person across ${HOME_NAME} · add a town to see what's near you`;
     if (!hasNear) ask = finders;
   } else if (S.mode === "both" && !hasNear) {
     // No in-person list for these groups: online ones here, official finders for nearby
     list = list.filter((m) => m.m !== 0);
     list.forEach((m) => (m._k = null));
     list.sort((a, b) => until(a) - until(b));
-    note = `${list.length} online meetings · times are Irish and UK time`;
+    note = `${list.length} online meetings · times are your local time`;
     ask = finders;
   } else if (S.mode !== "online") {
     list.forEach((m) => (m._k = m.m === 1 ? null : km(S.here[0], S.here[1], m.la, m.lo)));
@@ -427,7 +440,7 @@ function render() {
     }
   } else {
     list.sort((a, b) => until(a) - until(b));
-    note = `${list.length} online meetings · times are Irish and UK time`;
+    note = `${list.length} online meetings · times are your local time`;
   }
   S.list = list;
   $("resNote").textContent = list.length ? note : "";
@@ -465,7 +478,7 @@ function openMeeting(i) {
 
 // ---------- Share Lantern ----------
 const SHARE_URL = "https://lanternrooms.org/";
-const SHARE_TEXT = "Lantern: free recovery meetings across Ireland and the UK, near you and online. Private, no sign-up.";
+const SHARE_TEXT = "Lantern: free recovery meetings near you and online, in Ireland, the UK, Canada, Australia and New Zealand. Private, no sign-up.";
 async function shareApp() {
   ste("track", "share");
   if (navigator.share) {
@@ -489,9 +502,11 @@ async function copyLink() {
 
 // ---------- Help sheet and About ----------
 // The Talk now popup: crisis and general lines only (topic lines like debt or quitting smoking stay on their topic)
-const SOS = ["emergency", "samaritans", "pieta", "shout", "lifeline", "hse", "frank", "drinkline", "dan", "ukna", "gamcare", "gamIE", "externIE", "externNI", "bodywhys", "beatNI", "beat", "alanonIE", "alanonUK", "nacoa"];
-const AREA = { all: "Ireland and the UK", ie: "Ireland", ni: "Northern Ireland", uk: "UK" };
-$("helpList").innerHTML = ["all", "ie", "ni", "uk"].map((a) =>
+const SOS = ["emergency", "samaritans", "pieta", "shout", "lifeline", "hse", "frank", "drinkline", "dan", "ukna", "gamcare", "gamIE", "externIE", "externNI", "bodywhys", "beatNI", "beat", "alanonIE", "alanonUK", "nacoa",
+  "emergencyCA", "crisisCA", "emergencyAU", "lifelineAU", "adhAU", "emergencyNZ", "needToTalk", "adhNZ"];
+const AREA = { all: "Ireland and the UK", ie: "Ireland", ni: "Northern Ireland", uk: "UK", ...COUNTRY };
+const IEUK = ["all", "ie", "ni", "uk"], ABROAD = ["ca", "au", "nz"];
+$("helpList").innerHTML = (HOME ? [HOME, ...IEUK, ...ABROAD.filter((a) => a !== HOME)] : [...IEUK, ...ABROAD]).map((a) =>
   `<h3>${AREA[a]}</h3>` + SOS.filter((k) => H[k][3] === a).map(telHTML).join("")).join("");
 ready.then(() => {
   $("srcList").innerHTML = DATA.sources.map((s) =>
@@ -512,7 +527,7 @@ ready.then(() => {
   });
 })();
 </script>
-<noscript><p style="padding:16px">Lantern lists free recovery meetings across Ireland and the UK. <a href="/meetings/">See meetings by town</a> or <a href="/meetings/online/">online meetings</a>.</p></noscript>
+<noscript><p style="padding:16px">Lantern lists free recovery meetings across Ireland and the UK, plus AA and NA in Canada, Australia and New Zealand. <a href="/meetings/">See meetings by town</a> or <a href="/meetings/online/">online meetings</a>.</p></noscript>
 <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});</script>
 </body>
 </html>

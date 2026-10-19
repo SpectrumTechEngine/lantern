@@ -73,7 +73,35 @@ const L = {
   frankFind: ["FRANK: find drug support near you", "Treatment · England", "https://www.talktofrank.com/get-help/find-support-near-you"],
   scotServices: ["Scottish drug and alcohol services", "Treatment · Scotland", "https://drugandalcoholservices.scot/"],
   dan: ["DAN 24/7", "Drug and alcohol help · Wales", "https://dan247.org.uk/"],
+  // Canada, Australia, New Zealand: drugs and alcohol (added 19 Oct 2026, links checked that day)
+  aaCA: ["Alcoholics Anonymous: find AA near you", "Canada and the USA", "https://www.aa.org/find-aa"],
+  aaAU: ["Alcoholics Anonymous Australia", "Australia, plus online", "https://meetings.aa.org.au/"],
+  aaNZ: ["Alcoholics Anonymous New Zealand", "Aotearoa New Zealand, plus online", "https://aa.org.nz/meetings/"],
+  naCA: ["Narcotics Anonymous Canada", "Canada", "https://canaacna.org/"],
+  naAU: ["Narcotics Anonymous Australia", "Australia", "https://www.na.org.au/multi/meetings/"],
+  naNZ: ["Narcotics Anonymous Aotearoa New Zealand", "New Zealand", "https://www.nzna.org/meetings/"],
 };
+// Countries outside Ireland and the UK (m.k on a meeting). No k = Ireland and the UK.
+const COUNTRY = { ca: "Canada", au: "Australia", nz: "New Zealand" };
+// Online meetings carry the time zone they're held in (m.z). Move one to another zone (default: this phone's).
+const TZ_OFF = {};
+function tzOff(z) {
+  if (z in TZ_OFF) return TZ_OFF[z];
+  try {
+    const now = Math.floor(Date.now() / 60000) * 60000, p = {};
+    for (const x of new Intl.DateTimeFormat("en-US", { timeZone: z, hourCycle: "h23", year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric" }).formatToParts(now)) p[x.type] = +x.value;
+    return (TZ_OFF[z] = (Date.UTC(p.year, p.month - 1, p.day, p.hour % 24, p.minute) - now) / 60000);
+  } catch (e) { return (TZ_OFF[z] = null); }
+}
+function moveTZ(m, to) {
+  if (!m.z) return m;
+  const a = tzOff(m.z), b = tzOff(to || Intl.DateTimeFormat().resolvedOptions().timeZone);
+  if (a == null || b == null || a === b) return m;
+  const at = (t) => { const [h, mi] = t.split(":").map(Number); return ((m.d * 1440 + h * 60 + mi + b - a) % 10080 + 10080) % 10080; };
+  const hm = (v) => String(Math.floor(v % 1440 / 60)).padStart(2, "0") + ":" + String(v % 60).padStart(2, "0");
+  const s = at(m.t);
+  return { ...m, d: Math.floor(s / 1440), t: hm(s), e: m.e ? hm(at(m.e)) : "" };
+}
 // Helplines: [name, detail, number, area]
 const H = {
   emergency: ["Emergency services", "If someone is in danger", "112 or 999", "all"],
@@ -106,16 +134,25 @@ const H = {
   adviceNI: ["Advice NI", "Money and debt · Northern Ireland", "0800 915 4604", "ni"],
   stepchange: ["StepChange", "Debt · UK · Mon–Fri 8am–8pm, Sat 9am–2pm", "0800 138 1111", "uk"],
   natdebt: ["National Debtline", "Debt · Great Britain · Mon–Fri 9am–8pm, Sat 9:30am–1pm", "0808 808 4000", "uk"],
+  // Canada, Australia, New Zealand (numbers checked 19 Oct 2026)
+  emergencyCA: ["Emergency services", "Canada · if someone is in danger", "911", "ca"],
+  crisisCA: ["9-8-8 Suicide Crisis Helpline", "Canada · call or text · 24/7", "988", "ca"],
+  emergencyAU: ["Emergency services", "Australia · if someone is in danger", "000", "au"],
+  lifelineAU: ["Lifeline", "Australia · any crisis · 24/7", "13 11 14", "au"],
+  adhAU: ["National Alcohol and Other Drug Hotline", "Australia · 24/7", "1800 250 015", "au"],
+  emergencyNZ: ["Emergency services", "New Zealand · if someone is in danger", "111", "nz"],
+  needToTalk: ["Need to talk? 1737", "New Zealand · call or text · 24/7", "1737", "nz"],
+  adhNZ: ["Alcohol Drug Helpline", "New Zealand · 24/7", "0800 787 797", "nz"],
 };
 const CATS = {
   all:     { e: "🌍", t: "All meetings", f: Object.keys(FELLOW), intro: "Every group Lantern can show, near you and online.",
              links: Object.keys(L), help: Object.keys(H) },
-  alcohol: { e: "🍃", t: "Alcohol", f: ["aa"], intro: "Alcoholics Anonymous (AA) meets in almost every town. For meetings near you, tap an official finder below. Here are AA meetings online, on Irish and UK time.",
-             links: ["aaIE", "aaGB", "oiaa", "smartIE", "smartUK", "clubsoda", "wfs", "lifering", "rd", "cr", "hseMap", "niServices", "nhsAlcohol", "scotServices", "dan"],
-             help: ["hse", "drinkline", "dan", "samaritans", "lifeline"] },
+  alcohol: { e: "🍃", t: "Alcohol", f: ["aa"], intro: "Alcoholics Anonymous (AA) meets in almost every town. Lantern shows AA meetings in Australia and New Zealand, and online. In Ireland, the UK and Canada, tap an official finder below for meetings near you.",
+             links: ["aaIE", "aaGB", "aaCA", "aaAU", "aaNZ", "oiaa", "smartIE", "smartUK", "clubsoda", "wfs", "lifering", "rd", "cr", "hseMap", "niServices", "nhsAlcohol", "scotServices", "dan"],
+             help: ["hse", "drinkline", "dan", "samaritans", "lifeline", "crisisCA", "adhAU", "lifelineAU", "adhNZ", "needToTalk"] },
   drugs:   { e: "🌱", t: "Drugs", f: ["na", "cma"], intro: "Narcotics Anonymous (NA) welcomes anyone who wants to stop using any drug.",
-             links: ["naIE", "ukna", "vna", "caIE", "caUK", "cma", "ma", "pills", "smartIE", "smartUK", "lifering", "rd", "cr", "hseMap", "niServices", "frankFind", "scotServices", "dan"],
-             help: ["hse", "frank", "ukna", "dan", "samaritans", "lifeline"] },
+             links: ["naIE", "ukna", "naCA", "naAU", "naNZ", "vna", "caIE", "caUK", "cma", "ma", "pills", "smartIE", "smartUK", "lifering", "rd", "cr", "hseMap", "niServices", "frankFind", "scotServices", "dan"],
+             help: ["hse", "frank", "ukna", "dan", "samaritans", "lifeline", "crisisCA", "adhAU", "lifelineAU", "adhNZ", "needToTalk"] },
   gambling:{ e: "🎲", t: "Gambling", f: [], intro: "Gamblers Anonymous meets across Ireland and the UK. Tap below to see their meetings near you.",
              links: ["gaIE", "gaUK", "gamcareGroups", "gtherapy", "smartIE", "smartUK"], help: ["gamcare", "gamIE", "externIE", "externNI", "samaritans"] },
   food:    { e: "🍎", t: "Food and eating", f: [], intro: "For any struggle with food or eating, including eating disorders like anorexia, bulimia and binge eating. Bodywhys (Ireland) and Beat (UK) run free support groups and helplines, for you or someone you love.",

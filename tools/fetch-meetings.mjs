@@ -8,6 +8,19 @@ import path from "node:path";
 const here = path.dirname(new URL(import.meta.url).pathname.replace(/^\/(\w:)/, "$1"));
 const OUT = path.resolve(here, "..", "data", "meetings.json");
 const LOCAL_TZ = /^Europe\/(London|Dublin|Belfast)$/; // online meetings: only ones held on Irish/UK time
+// AA and NA online meetings: also ones held on Canadian, Australian and New Zealand time
+const WIDE_TZ = /^(Europe\/(London|Dublin|Belfast)|America\/(Toronto|Montreal|Vancouver|Edmonton|Winnipeg|Regina|Halifax|St_Johns|Moncton|Glace_Bay|Whitehorse|Dawson|Yellowknife|Iqaluit)|Australia\/\w+|Pacific\/Auckland)$/;
+// Countries outside Ireland and the UK (k on each in-person meeting), and a rough box around each
+const BOX = {
+  ca: (la, lo) => la > 41.6 && la < 84 && lo > -141.1 && lo < -52,
+  au: (la, lo) => la > -44 && la < -9 && lo > 112 && lo < 154,
+  nz: (la, lo) => la > -48 && la < -34 && lo > 165 && lo < 179,
+};
+// Town from an address like "57 Tabilban St, Burleigh Heads QLD 4220, Australia" -> "Burleigh Heads"
+const townFrom = (a) => {
+  const p = (a || "").split(",").map((x) => x.trim()).filter((x) => x && !/^(australia|new zealand|canada)$/i.test(x));
+  return (p[p.length - 1] || "").replace(/\s+\d{4}$/, "").replace(/\s+(NSW|VIC|QLD|SA|WA|TAS|NT|ACT)$/i, "").trim();
+};
 const UA = { "User-Agent": "Lantern meeting finder (lanternrooms.org)" };
 
 const getJSON = async (url) => {
@@ -35,6 +48,8 @@ const meeting = (o) => ({
   m: o.m, la: o.m === 1 ? null : o.la, lo: o.m === 1 ? null : o.lo,
   a: o.m === 1 ? "" : (o.a || ""), c: o.m === 1 ? "" : tidyTown(o.c),
   u: o.m === 0 ? "" : url(o.u), g: tags(o.g), s: o.s, l: url(o.l),
+  // z: the time zone an online meeting's times are in (the app shows them in the phone's own time)
+  ...(o.m !== 0 && o.z ? { z: o.z } : {}), ...(o.m !== 1 && o.k ? { k: o.k } : {}),
 });
 // Town names: "D 10" / "Dub 2" -> "Dublin 10", "LONDON" -> "London"; null = the list says the meeting has closed
 function tidyTown(s) {
@@ -46,12 +61,15 @@ function tidyTown(s) {
 }
 const valid = (m) => m.c !== null && m.d >= 0 && m.d <= 6 && /^\d\d:\d\d$/.test(m.t) && (m.m === 1 ? m.u || m.l : m.la != null);
 
-// ---------- BMLT (NA Ireland, Virtual NA) ----------
+// ---------- BMLT (NA Ireland, Virtual NA, NA Canada/Australia/New Zealand) ----------
+// k: a country's own server. Keeps only meetings in that country (NZ's also lists Asia);
+// online ones only when their time zone is known, hybrid ones count as in person.
 const BMLT_FIELDS = "meeting_name,weekday_tinyint,start_time,duration_time,time_zone,latitude,longitude,location_text,location_street,location_municipality,location_postal_code_1,venue_type,virtual_meeting_link,formats,published";
-async function bmlt(src, base, query, online) {
+async function bmlt(src, base, query, online, k) {
   const rows = await getJSON(`${base}/client_interface/json/?switcher=GetSearchResults&${query}&data_field_key=${BMLT_FIELDS}`);
-  return rows.filter((r) => r.published === "1" && (!online || LOCAL_TZ.test(r.time_zone))).map((r) => {
-    const m = online ? 1 : r.venue_type === "2" ? 1 : r.venue_type === "3" ? 2 : 0;
+  return rows.filter((r) => r.published === "1" && (!online || WIDE_TZ.test(r.time_zone)) &&
+    (!k || (r.venue_type === "2" ? WIDE_TZ.test(r.time_zone) : BOX[k](+r.latitude, +r.longitude)))).map((r) => {
+    const m = online || r.venue_type === "2" ? 1 : r.venue_type === "3" && !k ? 2 : 0;
     const [dh, dm] = (r.duration_time || "").split(":").map(Number);
     const [sh, sm] = r.start_time.split(":").map(Number);
     const end = dh || dm ? (sh * 60 + sm + dh * 60 + dm) % 1440 : null;
@@ -61,6 +79,7 @@ async function bmlt(src, base, query, online) {
       m, la: num(r.latitude), lo: num(r.longitude),
       a: join(r.location_text, r.location_street, r.location_postal_code_1), c: r.location_municipality,
       u: r.virtual_meeting_link, g: (r.formats || "").split(","), s: src,
+      z: WIDE_TZ.test(r.time_zone) ? r.time_zone : "", k,
     });
   });
 }
@@ -91,26 +110,27 @@ async function ukna() {
 }
 
 // ---------- Meeting Guide / 12 Step Meeting List feeds ----------
-async function guide(src, f, feed, keep = () => true) {
+// k: a country's own list (AA Australia, AA New Zealand): towns come from the address
+async function guide(src, f, feed, keep = () => true, k) {
   const rows = await getJSON(feed);
   return rows.filter((r) => r.day != null && r.day !== "" && keep(r)).flatMap((r) => {
     const att = r.attendance_option;
     if (att === "inactive") return [];
     const types = Array.isArray(r.types) ? r.types : [];
     const conf = url(r.conference_url);
-    const approx = r.approximate === "yes" || /^(united kingdom|ireland|uk)$/i.test((r.formatted_address || "").trim());
-    const hasPlace = num(r.latitude) != null && !approx && !types.includes("TC");
+    const approx = r.approximate === "yes" || /^(united kingdom|ireland|uk|australia|new zealand|canada)$/i.test((r.formatted_address || "").trim());
+    const hasPlace = num(r.latitude) != null && !approx && !types.includes("TC") && (!k || BOX[k](+r.latitude, +r.longitude));
     const m = att === "online" ? 1 : att === "hybrid" ? 2 : att === "in_person" ? 0
       : hasPlace && conf ? 2 : hasPlace ? 0 : 1;
-    if (m !== 1 && !hasPlace) return conf ? [meeting({ ...base(r, src, f, types), m: 1, u: conf })] : [];
-    return [meeting({ ...base(r, src, f, types), m, u: conf })];
+    if (m !== 1 && !hasPlace) return conf ? [meeting({ ...base(r, src, f, types, k), m: 1, u: conf })] : [];
+    return [meeting({ ...base(r, src, f, types, k), m, u: conf })];
   });
 }
-const base = (r, src, f, types) => ({
+const base = (r, src, f, types, k) => ({
   f, n: r.name, d: +r.day, t: hm(r.time), e: hm(r.end_time),
   la: num(r.latitude), lo: num(r.longitude),
-  a: join(r.location, r.formatted_address || r.address), c: r.city || r.region || "",
-  g: types, s: src, l: r.url,
+  a: join(r.location, r.formatted_address || r.address), c: k ? townFrom(r.formatted_address) : r.city || r.region || "",
+  g: types, s: src, l: r.url, z: r.timezone || "Europe/London", k,
 });
 const localTZ = (r) => LOCAL_TZ.test(r.timezone || "");
 
@@ -124,7 +144,18 @@ const SOURCES = [
     get: () => bmlt("vna", "https://bmlt.virtual-na.org/main_server", "services[]=0&recursive=1", true).catch(() =>
       bmlt("vna", "https://bmlt.virtual-na.org/main_server", "", true)) },
   { id: "oiaa", name: "Online Intergroup of AA", site: "https://aa-intergroup.org/meetings/",
-    get: () => guide("oiaa", "aa", "https://data.aa-intergroup.org/6436f5a3f03fdecef8459055.json", localTZ) },
+    get: () => guide("oiaa", "aa", "https://data.aa-intergroup.org/6436f5a3f03fdecef8459055.json", (r) => WIDE_TZ.test(r.timezone || "")) },
+  // Added 19 Oct 2026: Canada, Australia, New Zealand (drugs and alcohol only)
+  { id: "na-ca", name: "Narcotics Anonymous Canada", site: "https://canaacna.org/",
+    get: () => bmlt("na-ca", "https://canaacna.org/meetings/main_server", "", false, "ca") },
+  { id: "na-au", name: "Narcotics Anonymous Australia", site: "https://www.na.org.au/multi/meetings/",
+    get: () => bmlt("na-au", "https://www.na.org.au/main_server", "", false, "au") },
+  { id: "na-nz", name: "Narcotics Anonymous Aotearoa New Zealand", site: "https://www.nzna.org/meetings/",
+    get: () => bmlt("na-nz", "https://bmlt.nzna.org/main_server", "", false, "nz") },
+  { id: "aa-au", name: "Alcoholics Anonymous Australia", site: "https://meetings.aa.org.au/",
+    get: () => guide("aa-au", "aa", "https://meetings.aa.org.au/wp-admin/admin-ajax.php?action=meetings", undefined, "au") },
+  { id: "aa-nz", name: "Alcoholics Anonymous New Zealand", site: "https://aa.org.nz/meetings/",
+    get: () => guide("aa-nz", "aa", "https://aa.org.nz/wp-admin/admin-ajax.php?action=meetings", undefined, "nz") },
   { id: "cma", name: "Crystal Meth Anonymous", site: "https://www.crystalmeth.org/meetings",
     get: () => guide("cma", "cma", "https://www.crystalmeth.org/wp-admin/admin-ajax.php?action=meetings", localTZ) },
   { id: "slaa", name: "SLAA UK", site: "https://slaauk.org/",
