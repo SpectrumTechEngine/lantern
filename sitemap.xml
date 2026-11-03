@@ -187,7 +187,6 @@
   <url><loc>https://lanternrooms.org/meetings/christchurch/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/amersham/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/folkestone/</loc></url>
-  <url><loc>https://lanternrooms.org/meetings/glastonbury/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/leicester/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/peckham/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/torquay/</loc></url>
@@ -227,18 +226,18 @@
   <url><loc>https://lanternrooms.org/meetings/polbeth/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/tamworth/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/castle-cary/</loc></url>
-  <url><loc>https://lanternrooms.org/meetings/barnstaple/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/pontypridd/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/perth/</loc></url>
-  <url><loc>https://lanternrooms.org/meetings/watford/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/wrexham/</loc></url>
+  <url><loc>https://lanternrooms.org/meetings/barnstaple/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/consett/</loc></url>
-  <url><loc>https://lanternrooms.org/meetings/hastings/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/greater-manchester/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/peterborough/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/bedford/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/wateringbury/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/aberystwyth/</loc></url>
+  <url><loc>https://lanternrooms.org/meetings/hastings/</loc></url>
+  <url><loc>https://lanternrooms.org/meetings/watford/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/wokingham/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/surrey-canada/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/gibsons-canada/</loc></url>
@@ -748,6 +747,7 @@
   <url><loc>https://lanternrooms.org/meetings/south-yarra-australia/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/subiaco-australia/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/tewantin-australia/</loc></url>
+  <url><loc>https://lanternrooms.org/meetings/whyalla-playford-australia/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/christchurch-new-zealand/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/auckland-new-zealand/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/dunedin-new-zealand/</loc></url>
@@ -854,7 +854,6 @@
   <url><loc>https://lanternrooms.org/meetings/marrickville-australia/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/murray-bridge-australia/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/mount-martha-australia/</loc></url>
-  <url><loc>https://lanternrooms.org/meetings/whyalla-playford-australia/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/paradise-point-australia/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/ballarat-central-australia/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/annerley-australia/</loc></url>
