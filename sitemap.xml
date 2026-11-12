@@ -257,7 +257,6 @@
   <url><loc>https://lanternrooms.org/meetings/sainte-adele-canada/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/montreal-canada/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/penticton-canada/</loc></url>
-  <url><loc>https://lanternrooms.org/meetings/simcoe-canada/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/quebec-canada/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/kelowna-canada/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/kingston-canada/</loc></url>
@@ -403,6 +402,7 @@
   <url><loc>https://lanternrooms.org/meetings/port-hardy-canada/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/fort-st-john-canada/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/richmond-hill-canada/</loc></url>
+  <url><loc>https://lanternrooms.org/meetings/simcoe-canada/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/midland-canada/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/port-colborne-canada/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/osoyoos-canada/</loc></url>
@@ -767,10 +767,10 @@
   <url><loc>https://lanternrooms.org/meetings/queenstown-new-zealand/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/gisborne-new-zealand/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/new-plymouth-new-zealand/</loc></url>
-  <url><loc>https://lanternrooms.org/meetings/matamata-new-zealand/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/takaka-new-zealand/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/hawera-new-zealand/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/kaiwaka-new-zealand/</loc></url>
+  <url><loc>https://lanternrooms.org/meetings/matamata-new-zealand/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/napier-new-zealand/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/porirua-new-zealand/</loc></url>
   <url><loc>https://lanternrooms.org/meetings/kaikohe-new-zealand/</loc></url>
